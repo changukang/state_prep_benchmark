@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name="state_prep_benchmark"
+version="0.0.1"
+dependencies = [
+    "cirq",
+    "prettytable",
+    "fire",
+    "qiskit",
+    "ply",
+    "qiskit_aer"
+]
+
+[tool.setuptools.packages.find]
+include = ["state_prep_benchmark*"]
+

@@ -15,5 +15,5 @@ dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["state_prep_benchmark*"]
+include = ["state_preparation*"]
 

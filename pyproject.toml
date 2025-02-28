@@ -11,7 +11,9 @@ dependencies = [
     "fire",
     "qiskit",
     "ply",
-    "qiskit_aer"
+    "qiskit_aer",
+    "black",
+    "isort"
 ]
 
 [tool.setuptools.packages.find]
@@ -20,3 +22,12 @@ include = ["state_preparation*"]
 
 [tool.poetry.dependencies]
 my-package = { path = "./qclib", develop = true }
+
+[tool.black]
+force-exclude = '''
+	/(
+	| quantum-xyz
+	| qclib
+	)/
+'''
+

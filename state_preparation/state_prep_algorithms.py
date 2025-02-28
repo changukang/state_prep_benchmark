@@ -11,8 +11,7 @@ from qclib.state_preparation import LowRankInitialize
 from qiskit import transpile
 from qiskit_aer import AerSimulator
 from sp.qiskit_to_cirq import qiskit2cirq
-from sp.special_states import (GenearlizdeWTypeState,
-                               GenearlizdeWTypeStateWithPLU)
+from sp.special_states import GenearlizdeWTypeState, GenearlizdeWTypeStateWithPLU
 from sp.special_three_qubit_states import ThreeQubitWType
 from sp.symbolic_expression.w_type import *
 from sp.utils import get_number_of_cnot

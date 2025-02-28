@@ -1,0 +1,3 @@
+[submodule "qclib"]
+	path = qclib
+	url = https://github.com/changukang/qclib.git

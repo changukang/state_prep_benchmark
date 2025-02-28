@@ -1,20 +1,21 @@
 import logging
 import time
 from dataclasses import dataclass
-import qiskit
-
+from functools import cached_property
+from typing import Union
 import cirq
 import numpy as np
+import qiskit
 import xyz
 from qclib.state_preparation import LowRankInitialize
 from qiskit import transpile
 from qiskit_aer import AerSimulator
 from sp.qiskit_to_cirq import qiskit2cirq
-from sp.special_states import GenearlizdeWTypeState, GenearlizdeWTypeStateWithPLU
+from sp.special_states import (GenearlizdeWTypeState,
+                               GenearlizdeWTypeStateWithPLU)
 from sp.special_three_qubit_states import ThreeQubitWType
 from sp.symbolic_expression.w_type import *
 from sp.utils import get_number_of_cnot
-from functools import cached_property
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +61,10 @@ class LowRankStatePrep(StatePreparation):
         )
         return transpiled_circuit
 
+
 class IsometryBased(StatePreparation):
     pass
+
 
 @dataclass
 class StatePreparationResult:
@@ -71,7 +74,7 @@ class StatePreparationResult:
         state_prep_engine: StatePreparation,
         goal_sv: np.ndarray,
         circuit: Union[cirq.Circuit, qiskit.QuantumCircuit],
-        elapsed_time : float
+        elapsed_time: float,
     ):
         self.elapsed_time = None
         self.num_cnot = None
@@ -100,4 +103,3 @@ class StatePreparationResult:
     @cached_property
     def depth(self):
         pass
-    

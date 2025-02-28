@@ -17,3 +17,6 @@ dependencies = [
 [tool.setuptools.packages.find]
 include = ["state_preparation*"]
 
+
+[tool.poetry.dependencies]
+my-package = { path = "./qclib", develop = true }

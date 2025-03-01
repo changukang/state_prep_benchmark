@@ -7,46 +7,21 @@ from typing import Union
 import cirq
 import numpy as np
 import qiskit
-import xyz
 from qiskit import transpile
 from qiskit_aer import AerSimulator
-from sp.qiskit_to_cirq import qiskit2cirq
-from sp.special_states import (GenearlizdeWTypeState,
-                               GenearlizdeWTypeStateWithPLU)
-from sp.special_three_qubit_states import ThreeQubitWType
-from sp.symbolic_expression.w_type import *
-from sp.utils import get_number_of_cnot
+from abc import ABC, abstractmethod
 
 from qclib.state_preparation import LowRankInitialize
 
 logger = logging.getLogger(__name__)
 
 
-class StatePreparation:
+class StatePreparation(ABC):
+    
+    @abstractmethod
     def run(
         self, state_vector: np.ndarray, target_object: str = "cirq"
     ) -> "StatePreparationResult": ...
-
-
-class QuantumXYZ(StatePreparation):
-    # implementation of https://arxiv.org/abs/2401.01009
-
-    def run(self, state_vector: np.ndarray, target_object: str = "cirq"):
-        logger.info(f"State to Prepare : {cirq.dirac_notation(state_vector)}")
-        logger.info(f"num qubit : {int(np.log2(state_vector.shape[0]))}")
-        logger.info("Running XYZ")
-        target_state = xyz.quantize_state(state_vector)
-        # synthesize the state
-        start_time = time.time()
-        circuit = xyz.prepare_state(target_state, map_gates=True, verbose_level=0)
-        end_time = time.time()
-        synthesized_qc = xyz.to_qiskit(circuit)
-        backend = AerSimulator()
-        t_circuit = transpile(
-            synthesized_qc, backend, basis_gates=["u1", "u2", "u3", "cx"]
-        )
-        return t_circuit, (end_time - start_time)
-
 
 class LowRankStatePrep(StatePreparation):
     # implementation of https://arxiv.org/abs/2111.03132

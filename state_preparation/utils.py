@@ -1,6 +1,5 @@
 import cirq
 import numpy as np
-import qiskit
 
 
 def num_qubit(state_vector: np.ndarray) -> int:

@@ -4,7 +4,7 @@ import cirq.circuits
 from state_preparation.state_prep_algorithms import LowRankStatePrep
 
 
-def test():
+def test_qclib():
     qc = cirq.Circuit()
     a, b, c = cirq.LineQubit.range(3)
 
@@ -15,4 +15,4 @@ def test():
     sv = cirq.final_state_vector(qc)
 
     qc = LowRankStatePrep().run(sv)
-    print(qc)
+    assert qc

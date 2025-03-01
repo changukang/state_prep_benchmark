@@ -19,6 +19,14 @@ pytest .
 ```
 
 ## Lint
+
+Formatting : 
 ```
 black . && isort .
+```
+
+Type check :
+
+```
+mypy .
 ```

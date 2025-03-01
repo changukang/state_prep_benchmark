@@ -1,4 +1,4 @@
-from typing import Generator, Optional
+from typing import Optional
 
 import cirq
 import numpy as np

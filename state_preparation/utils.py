@@ -1,7 +1,8 @@
+from contextlib import contextmanager
+from time import perf_counter
+
 import cirq
 import numpy as np
-from time import perf_counter
-from contextlib import contextmanager
 
 
 def num_qubit(state_vector: np.ndarray) -> int:

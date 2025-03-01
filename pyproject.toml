@@ -45,6 +45,5 @@ include = ["state_preparation*"]
 testpaths = ["test"]  
 norecursedirs = ["qclib"]
 
-
 [tool.ruff]
 exclude = ["qclib"]

@@ -1,15 +1,18 @@
 import logging
 from abc import ABC, abstractmethod
+from typing import Union
 
 import cirq
 import numpy as np
 import qiskit
 from qiskit import transpile
 from qiskit_aer import AerSimulator
-from .utils import num_qubit, catchtime
+
+from qclib.state_preparation import LowRankInitialize
+
 from .circuit_converter import qiskit2cirq
 from .results import StatePreparationResult
-from qclib.state_preparation import LowRankInitialize
+from .utils import catchtime, num_qubit
 
 logger = logging.getLogger(__name__)
 QISKIT = "qiskit"
@@ -18,16 +21,26 @@ CIRQ = "cirq"
 
 class StatePreparation(ABC):
 
+    def run(self, state_vector: np.ndarray) -> StatePreparationResult:
+        self._pre_run(state_vector)
+        self._get_result(state_vector)
+
+    def _pre_run(self, state_vector: np.ndarray):
+        sv_num_qubit = num_qubit(state_vector)
+        if sv_num_qubit < 10:
+            logger.info(f"State to Prepare : {cirq.dirac_notation(state_vector)}")
+        logger.info(f"Num qubit : {sv_num_qubit}")
+
     @abstractmethod
-    def run(
-        self, state_vector: np.ndarray, target_object: str = CIRQ
+    def _get_result(
+        state_vector: np.ndarray,
     ) -> StatePreparationResult: ...
 
 
 class LowRankStatePrep(StatePreparation):
     # implementation of https://arxiv.org/abs/2111.03132
 
-    def run(self, state_vector: np.ndarray):
+    def _get_result(self, state_vector: np.ndarray) -> StatePreparationResult:
         sv_num_qubit = num_qubit(state_vector)
         if sv_num_qubit < 10:
             logger.info(f"State to Prepare : {cirq.dirac_notation(state_vector)}")
@@ -35,7 +48,7 @@ class LowRankStatePrep(StatePreparation):
 
         logger.info("Running LowRankStatePrep")
         backend = AerSimulator()
-        with catchtime() as time : 
+        with catchtime() as time:
             circuit = LowRankInitialize(state_vector).definition
 
         transpiled_circuit = transpile(
@@ -46,17 +59,27 @@ class LowRankStatePrep(StatePreparation):
         return StatePreparationResult(
             state_prep_engine=type(self),
             target_sv=state_vector,
-            circuit = transpiled_circuit,
-            elapsed_time=time()
+            circuit=transpiled_circuit,
+            elapsed_time=time(),
         )
 
 
 class IsometryBased(StatePreparation):
     # qiskit implementation of https://arxiv.org/abs/1501.06911
 
-    def run(self):
-        qiskit_qc = qiskit.QuantumCircuit(n)
-        qiskit_qc.append(qiskit.circuit.library.StatePreparation(params=sv), range(n))
+    def _get_result(self, state_vector: np.ndarray):
+        qiskit_qc = qiskit.QuantumCircuit(num_qubit(state_vector))
+        qiskit_qc.append(
+            qiskit.circuit.library.StatePreparation(params=state_vector),
+            range(num_qubit(state_vector)),
+        )
+        with catchtime() as time:
+            transpiled_qiskit_qc = transpile(qiskit_qc, basis_gates=["u3", "cx"])
+        assert isinstance(transpiled_qiskit_qc, qiskit.QuantumCircuit)
 
-        transpiled_qiskit_qc = transpile(qiskit_qc, basis_gates=["u3", "cx"])
-        transpiled_cirq_qc = qiskit2cirq(transpiled_qiskit_qc)
+        return StatePreparationResult(
+            state_prep_engine=type(self),
+            target_sv=state_vector,
+            circuit=transpiled_qiskit_qc,
+            elapsed_time=time(),
+        )

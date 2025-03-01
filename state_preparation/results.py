@@ -1,13 +1,13 @@
 import logging
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
 import cirq
 import cirq.circuits
 import numpy as np
 import qiskit
-from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from .state_prep_algorithms import StatePreparation
 
@@ -39,4 +39,3 @@ class StatePreparationResult:
     @property
     def depth(self):
         pass
-        

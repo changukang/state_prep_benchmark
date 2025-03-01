@@ -1,5 +1,6 @@
 import logging
 import time
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import cached_property
 from typing import Union
@@ -9,7 +10,6 @@ import numpy as np
 import qiskit
 from qiskit import transpile
 from qiskit_aer import AerSimulator
-from abc import ABC, abstractmethod
 
 from qclib.state_preparation import LowRankInitialize
 
@@ -17,11 +17,12 @@ logger = logging.getLogger(__name__)
 
 
 class StatePreparation(ABC):
-    
+
     @abstractmethod
     def run(
         self, state_vector: np.ndarray, target_object: str = "cirq"
     ) -> "StatePreparationResult": ...
+
 
 class LowRankStatePrep(StatePreparation):
     # implementation of https://arxiv.org/abs/2111.03132

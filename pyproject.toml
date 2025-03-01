@@ -3,26 +3,20 @@ requires = ["setuptools >= 61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name="state_prep_benchmark"
-version="0.0.1"
+name = "state_prep_benchmark"
+version = "0.0.1"
 dependencies = [
-    "cirq",
-    "prettytable",
-    "fire",
-    "qiskit",
-    "ply",
-    "qiskit_aer",
-    "black",
-    "isort",
-    "mypy"
+  "cirq",
+  "prettytable",
+  "fire",
+  "qiskit",
+  "ply",
+  "qiskit_aer",
+  "black",
+  "isort",
+  "mypy",
+  "pytest"
 ]
-
-[tool.setuptools.packages.find]
-include = ["state_preparation*"]
-
-
-[tool.poetry.dependencies]
-my-package = { path = "./qclib", develop = true }
 
 [tool.black]
 force-exclude = '''
@@ -34,10 +28,19 @@ force-exclude = '''
 [tool.isort]
 skip = ["quantum-xyz", "qclib"]
 
-
 [tool.mypy]
 exclude = "^(qclib/)"
 
 [[tool.mypy.overrides]]
 module = ["qiskit", "qiskit_aer", "qclib.*", "xyz"]
 ignore_missing_imports = true
+
+[tool.poetry.dependencies]
+my-package = {path = "./qclib", develop = true}
+
+[tool.setuptools.packages.find]
+include = ["state_preparation*"]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]  
+norecursedirs = ["qclib"]

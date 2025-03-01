@@ -3,24 +3,26 @@ import time
 from dataclasses import dataclass
 from functools import cached_property
 from typing import Union
+
 import cirq
 import numpy as np
 import qiskit
 import xyz
-from qclib.state_preparation import LowRankInitialize
 from qiskit import transpile
 from qiskit_aer import AerSimulator
 from sp.qiskit_to_cirq import qiskit2cirq
-from sp.special_states import GenearlizdeWTypeState, GenearlizdeWTypeStateWithPLU
+from sp.special_states import (GenearlizdeWTypeState,
+                               GenearlizdeWTypeStateWithPLU)
 from sp.special_three_qubit_states import ThreeQubitWType
 from sp.symbolic_expression.w_type import *
 from sp.utils import get_number_of_cnot
+
+from qclib.state_preparation import LowRankInitialize
 
 logger = logging.getLogger(__name__)
 
 
 class StatePreparation:
-
     def run(
         self, state_vector: np.ndarray, target_object: str = "cirq"
     ) -> "StatePreparationResult": ...
@@ -67,7 +69,6 @@ class IsometryBased(StatePreparation):
 
 @dataclass
 class StatePreparationResult:
-
     def __init__(
         self,
         state_prep_engine: StatePreparation,

@@ -1,4 +1,5 @@
 from typing import Generator, Optional
+
 import cirq
 import numpy as np
 from numpy.random import random_sample

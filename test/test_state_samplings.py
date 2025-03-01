@@ -1,4 +1,5 @@
-from state_preparation.state_samplers import get_random_state, get_random_sparse_state
+from state_preparation.state_samplers import (get_random_sparse_state,
+                                              get_random_state)
 
 
 def test_random_state():

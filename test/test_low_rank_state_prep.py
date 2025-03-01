@@ -5,7 +5,6 @@ from state_preparation.state_prep_algorithms import LowRankStatePrep
 
 
 def test():
-
     qc = cirq.Circuit()
     a, b, c = cirq.LineQubit.range(3)
 

@@ -26,8 +26,13 @@ my-package = { path = "./qclib", develop = true }
 [tool.black]
 force-exclude = '''
 	/(
-	| quantum-xyz
 	| qclib
 	)/
 '''
+
+[tool.isort]
+skip = ["quantum-xyz", "qclib"]
+
+
+
 

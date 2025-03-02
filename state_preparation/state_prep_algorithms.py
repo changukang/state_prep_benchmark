@@ -5,10 +5,9 @@ from typing import Union
 import cirq
 import numpy as np
 import qiskit
+from qclib.state_preparation import LowRankInitialize
 from qiskit import transpile
 from qiskit_aer import AerSimulator
-
-from qclib.state_preparation import LowRankInitialize
 
 from .circuit_converter import qiskit2cirq
 from .results import StatePreparationResult

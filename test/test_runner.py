@@ -1,5 +1,4 @@
-from state_preparation.state_prep_algorithms import (IsometryBased,
-                                                     LowRankStatePrep)
+from state_preparation.state_prep_algorithms import IsometryBased, LowRankStatePrep
 from state_preparation.state_samplers import get_random_state
 
 

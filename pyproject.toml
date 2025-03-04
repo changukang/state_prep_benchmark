@@ -10,6 +10,7 @@ dependencies = [
   "prettytable",
   "fire",
   "qiskit",
+  "qiskit_aer",
   "ply",
   "qiskit_aer",
   "black",
@@ -44,6 +45,9 @@ include = ["state_preparation*"]
 [tool.pytest.ini_options]
 testpaths = ["test"]  
 norecursedirs = ["qclib"]
+pythonpath = [
+  "."
+]
 
 [tool.ruff]
 exclude = ["qclib"]

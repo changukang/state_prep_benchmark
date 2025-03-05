@@ -1,6 +1,7 @@
-from state_preparation.benchmark.states import BalancedHammingWeight
-import numpy as np
 import cirq
+import numpy as np
+
+from state_preparation.benchmark.states import BalancedHammingWeight
 
 ZERO_KET = np.array([1, 0])
 ONE_KET = np.array([0, 1])

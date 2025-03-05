@@ -23,13 +23,17 @@ class StatePreparation(ABC):
 
     def run(self, state_vector: np.ndarray) -> StatePreparationResult:
         self._pre_run(state_vector)
-        self._get_result(state_vector)
+        return self._get_result(state_vector)
 
     def _pre_run(self, state_vector: np.ndarray):
         sv_num_qubit = num_qubit(state_vector)
         if sv_num_qubit < 10:
             logger.info(f"State to Prepare : {cirq.dirac_notation(state_vector)}")
         logger.info(f"Num qubit : {sv_num_qubit}")
+
+    @property
+    @abstractmethod
+    def name(self): ...
 
     @abstractmethod
     def _get_result(
@@ -63,6 +67,10 @@ class LowRankStatePrep(StatePreparation):
             elapsed_time=time(),
         )
 
+    @property
+    def name(self):
+        return "Low Rank"
+
 
 class IsometryBased(StatePreparation):
     # qiskit implementation of https://arxiv.org/abs/1501.06911
@@ -83,3 +91,7 @@ class IsometryBased(StatePreparation):
             circuit=transpiled_qiskit_qc,
             elapsed_time=time(),
         )
+
+    @property
+    def name(self):
+        return "Isometry"

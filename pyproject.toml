@@ -16,7 +16,9 @@ dependencies = [
   "black",
   "isort",
   "mypy",
-  "pytest"
+  "pytest",
+  "fire",
+  "rich"
 ]
 
 [tool.black]

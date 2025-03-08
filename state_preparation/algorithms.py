@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from typing import Union
-
+from qiskit.exceptions import QiskitError
 import cirq
 import numpy as np
 import qiskit
@@ -19,11 +19,20 @@ QISKIT = "qiskit"
 CIRQ = "cirq"
 
 
+class InvalidStatePreparationResult(Exception):
+    pass
+
+
 class StatePreparation(ABC):
 
     def run(self, state_vector: np.ndarray) -> StatePreparationResult:
         self._pre_run(state_vector)
-        return self._get_result(state_vector)
+        result_qc = None
+        try:
+            result_qc = self._get_result(state_vector)
+            return result_qc
+        except QiskitError:
+            raise InvalidStatePreparationResult
 
     def _pre_run(self, state_vector: np.ndarray):
         sv_num_qubit = num_qubit(state_vector)

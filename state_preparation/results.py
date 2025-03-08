@@ -66,7 +66,7 @@ class StatePreparationResult:
         raise NotImplementedError
 
     def _get_noramlized_cirq_circuit(self):
-        pass
+        raise NotImplementedError
 
     @property
     def num_cnot(self):

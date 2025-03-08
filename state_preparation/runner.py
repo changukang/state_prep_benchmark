@@ -1,6 +1,5 @@
 import logging
 from typing import List, Optional, Union
-import itertools
 import numpy as np
 from rich.console import Console
 from rich.table import Table

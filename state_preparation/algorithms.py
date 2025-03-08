@@ -1,6 +1,5 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Union
 from qiskit.exceptions import QiskitError
 import cirq
 import numpy as np
@@ -10,7 +9,6 @@ from qiskit_aer import AerSimulator
 
 from qclib.state_preparation import LowRankInitialize
 
-from .circuit_converter import qiskit2cirq
 from .results import StatePreparationResult
 from .utils import catchtime, num_qubit
 

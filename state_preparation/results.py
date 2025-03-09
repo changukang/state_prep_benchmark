@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 from functools import cached_property
-from typing import TYPE_CHECKING, Dict, Final, List, Union
+from typing import TYPE_CHECKING, Dict, Final, List, Union, Any
 from state_preparation.utils import (
     num_cnot_for_cirq_circuit,
     validate_result_cirq_circuit,
@@ -19,6 +19,12 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 AVAILABLE_RESULT_ITEMS: Final[str] = ["num_cnot", "depth", "elapsed_time"]
+
+
+def item_result_expr_render(result: Any) -> str:
+    if type(result) is float:
+        return str(round(result, 3))
+    return str(result)
 
 
 @dataclass
@@ -48,7 +54,9 @@ class StatePreparationResult:
         sorted_result_items = sorted(
             result_items, key=lambda x: self._result_item_rank[x]
         )
-        return [str(getattr(self, item)) for item in sorted_result_items]
+        return [
+            item_result_expr_render(getattr(self, item)) for item in sorted_result_items
+        ]
 
     @cached_property
     def cirq_circuit(self) -> cirq.Circuit:

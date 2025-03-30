@@ -61,7 +61,7 @@ class StatePreparationResult:
     @cached_property
     def cirq_circuit(self) -> cirq.Circuit:
         cirq_circuit = (
-            qiskit2cirq(self.circuit)
+            qiskit2cirq(self.circuit.reverse_bits())
             if isinstance(self.circuit, qiskit.QuantumCircuit)
             else self.circuit
         )

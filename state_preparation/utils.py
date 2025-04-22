@@ -4,6 +4,7 @@ from time import perf_counter
 import cirq
 import numpy as np
 
+
 def keep_ftn_for_cirq_decompose(gate_op: cirq.Operation):
     if gate_op.gate.num_qubits() == 1:
         return True
@@ -14,6 +15,7 @@ def keep_ftn_for_cirq_decompose(gate_op: cirq.Operation):
             return False
     else:
         return False
+
 
 def num_qubit(state_vector: np.ndarray) -> int:
     log2_res = np.log2(state_vector.shape[0])

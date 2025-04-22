@@ -1,10 +1,11 @@
 import logging
 from abc import ABC, abstractmethod
-from qiskit.exceptions import QiskitError
+
 import cirq
 import numpy as np
 import qiskit
 from qiskit import transpile
+from qiskit.exceptions import QiskitError
 from qiskit_aer import AerSimulator
 
 from qclib.state_preparation import LowRankInitialize
@@ -89,7 +90,9 @@ class IsometryBased(StatePreparation):
             range(num_qubit(state_vector)),
         )
         with catchtime() as time:
-            transpiled_qiskit_qc = transpile(qiskit_qc, basis_gates=["u3", "cx"], optimization_level=0)
+            transpiled_qiskit_qc = transpile(
+                qiskit_qc, basis_gates=["u3", "cx"], optimization_level=0
+            )
         assert isinstance(transpiled_qiskit_qc, qiskit.QuantumCircuit)
 
         return StatePreparationResult(

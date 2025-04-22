@@ -1,10 +1,11 @@
 import logging
 from typing import List, Optional, Union
+
 import numpy as np
 from rich.console import Console
 from rich.table import Table
 
-from .algorithms import StatePreparation, InvalidStatePreparationResult
+from .algorithms import InvalidStatePreparationResult, StatePreparation
 from .benchmark.states import BalancedHammingWeight
 from .results import AVAILABLE_RESULT_ITEMS
 from .statevector import StateVectorWithInfo

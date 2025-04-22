@@ -1,9 +1,10 @@
+import random
+from typing import List
+
 from state_preparation.algorithms import IsometryBased, LowRankStatePrep
 from state_preparation.runner import run_state_preparations
 from state_preparation.state_samplers import get_random_sparse_state
 from state_preparation.statevector import StateVectorWithInfo
-from typing import List
-import random
 
 
 def test_run_state_preparations():

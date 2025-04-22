@@ -1,17 +1,18 @@
 import logging
 from dataclasses import dataclass
 from functools import cached_property
-from typing import TYPE_CHECKING, Dict, Final, List, Union, Any
-from state_preparation.utils import (
-    num_cnot_for_cirq_circuit,
-    validate_result_cirq_circuit,
-)
-from state_preparation.circuit_converter import qiskit2cirq
+from typing import TYPE_CHECKING, Any, Dict, Final, List, Union
 
 import cirq
 import cirq.circuits
 import numpy as np
 import qiskit
+
+from state_preparation.circuit_converter import qiskit2cirq
+from state_preparation.utils import (
+    num_cnot_for_cirq_circuit,
+    validate_result_cirq_circuit,
+)
 
 if TYPE_CHECKING:
     from .algorithms import StatePreparation

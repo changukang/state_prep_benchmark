@@ -89,7 +89,7 @@ class IsometryBased(StatePreparation):
             range(num_qubit(state_vector)),
         )
         with catchtime() as time:
-            transpiled_qiskit_qc = transpile(qiskit_qc, basis_gates=["u3", "cx"])
+            transpiled_qiskit_qc = transpile(qiskit_qc, basis_gates=["u3", "cx"], optimization_level=0)
         assert isinstance(transpiled_qiskit_qc, qiskit.QuantumCircuit)
 
         return StatePreparationResult(

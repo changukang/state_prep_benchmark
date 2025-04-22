@@ -64,7 +64,7 @@ class LowRankStatePrep(StatePreparation):
             circuit = LowRankInitialize(state_vector).definition
 
         transpiled_circuit = transpile(
-            circuit, backend, basis_gates=["u3", "cx"], optimization_level=3
+            circuit, backend, basis_gates=["u3", "cx"], optimization_level=0
         )
         assert isinstance(transpiled_circuit, qiskit.QuantumCircuit)
 

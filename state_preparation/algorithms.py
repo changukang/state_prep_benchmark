@@ -19,10 +19,13 @@ CIRQ = "cirq"
 
 
 class InvalidStatePreparationResult(Exception):
-    pass
+        
+        def __init__(self, e : Exception):
+            msg = f"Exception was raised : {e}"
+            super().__init__(msg)
 
 
-class StatePreparation(ABC):
+class StatePreparationBase(ABC):
 
     def run(self, state_vector: np.ndarray) -> StatePreparationResult:
         self._pre_run(state_vector)
@@ -30,8 +33,8 @@ class StatePreparation(ABC):
         try:
             result_qc = self._get_result(state_vector)
             return result_qc
-        except QiskitError:
-            raise InvalidStatePreparationResult
+        except QiskitError as e:
+            raise InvalidStatePreparationResult(e)
 
     def _pre_run(self, state_vector: np.ndarray):
         sv_num_qubit = num_qubit(state_vector)
@@ -49,7 +52,7 @@ class StatePreparation(ABC):
     ) -> StatePreparationResult: ...
 
 
-class LowRankStatePrep(StatePreparation):
+class LowRankStatePrep(StatePreparationBase):
     # implementation of https://arxiv.org/abs/2111.03132
 
     def _get_result(self, state_vector: np.ndarray) -> StatePreparationResult:
@@ -80,7 +83,7 @@ class LowRankStatePrep(StatePreparation):
         return "Low Rank"
 
 
-class IsometryBased(StatePreparation):
+class IsometryBased(StatePreparationBase):
     # qiskit implementation of https://arxiv.org/abs/1501.06911
 
     def _get_result(self, state_vector: np.ndarray):

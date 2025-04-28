@@ -1,5 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
+from typing import Optional
 
 import cirq
 import numpy as np
@@ -19,10 +20,10 @@ CIRQ = "cirq"
 
 
 class InvalidStatePreparationResult(Exception):
-        
-        def __init__(self, e : Exception):
-            msg = f"Exception was raised : {e}"
-            super().__init__(msg)
+
+    def __init__(self, e: Optional[Exception] = None):
+        msg = f"Exception was raised : {e}"
+        super().__init__(msg)
 
 
 class StatePreparationBase(ABC):

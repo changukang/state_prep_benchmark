@@ -9,10 +9,8 @@ import numpy as np
 import qiskit
 
 from state_preparation.circuit_converter import qiskit2cirq
-from state_preparation.utils import (
-    num_cnot_for_cirq_circuit,
-    validate_result_cirq_circuit,
-)
+from state_preparation.utils import (num_cnot_for_cirq_circuit,
+                                     validate_result_cirq_circuit)
 
 if TYPE_CHECKING:
     from .algorithms import StatePreparation

@@ -5,7 +5,7 @@ import numpy as np
 from rich.console import Console
 from rich.table import Table
 
-from .algorithms import InvalidStatePreparationResult, StatePreparation
+from .algorithms import InvalidStatePreparationResult, StatePreparationBase
 from .benchmark.states import BalancedHammingWeight
 from .results import AVAILABLE_RESULT_ITEMS
 from .statevector import StateVectorWithInfo
@@ -22,7 +22,7 @@ def color_generator():
 
 def run_state_preparations(
     state_vectors: Union[List[np.ndarray], List[StateVectorWithInfo]],
-    state_preparations: List[StatePreparation],
+    state_preparations: List[StatePreparationBase],
     result_items: Optional[List[str]] = None,
 ) -> None:
     if result_items:

@@ -12,5 +12,5 @@ def test_random_sparse_statea():
 
 def test_random_basis_state_vectors():
     for seed in range(10):
-        get_random_sparse_state(num_qubit=2, sparsity=3, seed=seed)
+        get_random_basis_state_vectors(num_qubit=2, num_basis=2, seed=seed)
 

@@ -74,9 +74,8 @@ def catchtime():
 
 
 def is_orthogonal(basis: List[np.ndarray]) -> bool:
-    for idx, basis in enumerate(basis):
+    for idx, curr in enumerate(basis):
         for other in basis[idx + 1 :]:
-            dot = cirq.dot(basis, other)
-            if not np.isclose(cirq.dot(basis, other), 0):
+            if not np.isclose(cirq.dot(curr, other), 0):
                 return False
     return True

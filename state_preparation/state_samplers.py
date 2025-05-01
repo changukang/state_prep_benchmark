@@ -1,5 +1,5 @@
-from typing import Optional
-
+from typing import Optional, List
+from state_preparation.utils import is_orthogonal
 import cirq
 import numpy as np
 from numpy.random import random_sample
@@ -32,3 +32,17 @@ def get_random_sparse_state(
     sv = sv_building / np.linalg.norm(sv_building)
     cirq.validate_normalized_state_vector(sv, qid_shape=(2**num_qubit,))
     return sv
+
+
+def get_random_basis_state_vectors(
+    num_qubit: int, num_basis: int, seed: int = None
+) -> List[np.ndarray]:
+    rand_unitary = cirq.testing.random_unitary(dim=2**num_qubit, random_state=seed)
+    ret = [rand_unitary[:, i] for i in range(num_basis)]
+
+    for r in ret:
+        cirq.validate_normalized_state_vector(r, qid_shape=(2**num_qubit))
+
+    assert is_orthogonal(ret)
+
+    return ret

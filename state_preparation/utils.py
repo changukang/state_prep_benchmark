@@ -1,6 +1,8 @@
 from contextlib import contextmanager
 from time import perf_counter
 
+from typing import List
+
 import cirq
 import numpy as np
 
@@ -69,3 +71,12 @@ def catchtime():
     t1 = t2 = perf_counter()
     yield lambda: t2 - t1
     t2 = perf_counter()
+
+
+def is_orthogonal(basis: List[np.ndarray]) -> bool:
+    for idx, basis in enumerate(basis):
+        for other in basis[idx + 1 :]:
+            dot = cirq.dot(basis, other)
+            if not np.isclose(cirq.dot(basis, other), 0):
+                return False
+    return True

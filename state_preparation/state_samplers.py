@@ -1,8 +1,10 @@
-from typing import Optional, List
-from state_preparation.utils import is_orthogonal
+from typing import List, Optional
+
 import cirq
 import numpy as np
 from numpy.random import random_sample
+
+from state_preparation.utils import is_orthogonal
 
 
 def get_random_state(num_qubit: int, seed: Optional[int] = None) -> np.ndarray:

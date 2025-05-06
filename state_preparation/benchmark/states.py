@@ -1,7 +1,9 @@
-import numpy as np
-import cirq
-from .abstract import BenchmarkStateVector
 import math
+
+import cirq
+import numpy as np
+
+from .abstract import BenchmarkStateVector
 
 
 class BalancedHammingWeight(BenchmarkStateVector):

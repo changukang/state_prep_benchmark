@@ -1,4 +1,5 @@
 import math
+from typing import List
 
 import cirq
 import numpy as np
@@ -52,6 +53,26 @@ class HeadZeroSuperposition(BenchmarkStateVector):
             )
 
         sv_building /= np.sqrt(2)
+
+        cirq.validate_normalized_state_vector(sv_building, qid_shape=(2**num_qubit))
+
+        return sv_building
+
+
+class Unary(BenchmarkStateVector):
+    # ref : https://quantumcomputing.stackexchange.com/q/4545/15277
+
+    def __call__(self, amplitudes: List[float]):
+        num_qubit = len(amplitudes)
+
+        sv_building = np.zeros(shape=2**num_qubit, dtype=np.complex128)
+        sv_building += cirq.one_hot(index=0, shape=(2**num_qubit,), dtype=np.complex128)
+        for i, amp in enumerate(amplitudes):
+            sv_building += amp * cirq.one_hot(
+                index=2**i, shape=(2**num_qubit,), dtype=np.complex128
+            )
+
+        sv_building /= np.linalg.norm(sv_building)
 
         cirq.validate_normalized_state_vector(sv_building, qid_shape=(2**num_qubit))
 

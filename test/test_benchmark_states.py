@@ -2,7 +2,7 @@ import cirq
 import numpy as np
 
 from state_preparation.benchmark.states import (BalancedHammingWeight,
-                                                HeadZeroSuperposition)
+                                                HeadZeroSuperposition, Unary)
 
 ZERO_KET = np.array([1, 0])
 ONE_KET = np.array([0, 1])
@@ -53,3 +53,8 @@ def test_head_zero_superposition():
             )
         ),
     ).all()
+
+
+def test_unary():
+    unary = Unary()
+    sv = unary([1 / 2, 1 / 2, 1 / 2, 1 / 2])

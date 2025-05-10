@@ -7,7 +7,6 @@ import numpy as np
 import qiskit
 from qiskit import transpile
 from qiskit.exceptions import QiskitError
-from qiskit_aer import AerSimulator
 
 from qclib.state_preparation import LowRankInitialize
 
@@ -63,12 +62,11 @@ class LowRankStatePrep(StatePreparationBase):
         logger.info(f"Num qubit : {sv_num_qubit}")
 
         logger.info("Running LowRankStatePrep")
-        backend = AerSimulator()
         with catchtime() as time:
             circuit = LowRankInitialize(state_vector).definition
 
         transpiled_circuit = transpile(
-            circuit, backend, basis_gates=["u3", "cx"], optimization_level=0
+            circuit, basis_gates=["u3", "cx"], optimization_level=0
         )
         assert isinstance(transpiled_circuit, qiskit.QuantumCircuit)
 

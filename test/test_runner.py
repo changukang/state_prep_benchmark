@@ -2,6 +2,7 @@ import random
 from typing import List
 
 from state_preparation.algorithms import IsometryBased, LowRankStatePrep
+from state_preparation.benchmarking import run_random_sparse_benchmark
 from state_preparation.runner import run_state_preparations
 from state_preparation.state_samplers import get_random_sparse_state
 from state_preparation.statevector import StateVectorWithInfo
@@ -34,3 +35,8 @@ def test_run_state_preparations_with_sv_info():
     run_state_preparations(
         state_vectors, state_preparations, result_items=["num_cnot", "depth"]
     )
+
+
+def test_run_sparsity_benchmark():
+    state_preparations = [LowRankStatePrep(), IsometryBased()]
+    run_random_sparse_benchmark(8, 50, state_preparations)

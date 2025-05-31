@@ -1,10 +1,10 @@
 import logging
+import statistics
 from dataclasses import dataclass
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, Final, List, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, Final, List, Union
 
 import cirq
-import cirq.circuits
 import numpy as np
 import qiskit
 
@@ -15,11 +15,13 @@ from state_preparation.utils import (
 )
 
 if TYPE_CHECKING:
-    from .algorithms import StatePreparation
+    from .algorithms import StatePreparationBase
 
 logger = logging.getLogger(__name__)
-
-AVAILABLE_RESULT_ITEMS: Final[str] = ["num_cnot", "depth", "elapsed_time"]
+NUM_CNOT = "num_cnot"
+DEPTH = "depth"
+ELAPSED_TIME = "elapsed_time"
+AVAILABLE_RESULT_ITEMS: Final[List[str]] = [NUM_CNOT, DEPTH, ELAPSED_TIME]
 
 
 def item_result_expr_render(result: Any) -> str:
@@ -30,30 +32,27 @@ def item_result_expr_render(result: Any) -> str:
 
 @dataclass
 class StatePreparationResult:
-    state_prep_engine: "StatePreparation"
+    state_prep_engine: "StatePreparationBase"
     target_sv: np.ndarray
     circuit: Union[cirq.Circuit, qiskit.QuantumCircuit]
     elapsed_time: float
 
-    @property
-    def available_result_item(self):
-        return AVAILABLE_RESULT_ITEMS
-
-    @property
-    def _result_item_rank(self) -> Dict[str, int]:
-        return {item: idx for idx, item in enumerate(self.available_result_item)}
+    available_result_item: ClassVar[List[str]] = AVAILABLE_RESULT_ITEMS
+    result_items_rank: ClassVar[Dict[str, int]] = {
+        item: idx for idx, item in enumerate(AVAILABLE_RESULT_ITEMS)
+    }
 
     def _export_to_row_data(self, result_items: List[str]) -> List[str]:
         # should be exclusively used for rich.table.Table().add_row()
         if result_items:
             for item in result_items:
-                if item not in self.available_result_item:
+                if item not in StatePreparationResult.available_result_item:
                     raise ValueError(f"Invalid Result Item {item}")
         else:
-            result_items = AVAILABLE_RESULT_ITEMS
+            result_items = StatePreparationResult.available_result_item
 
         sorted_result_items = sorted(
-            result_items, key=lambda x: self._result_item_rank[x]
+            result_items, key=lambda x: StatePreparationResult.result_items_rank[x]
         )
         return [
             item_result_expr_render(getattr(self, item)) for item in sorted_result_items
@@ -78,9 +77,43 @@ class StatePreparationResult:
         raise NotImplementedError
 
     @property
-    def num_cnot(self):
+    def num_cnot(self) -> int:
         return num_cnot_for_cirq_circuit(self.cirq_circuit)
 
     @property
-    def depth(self):
+    def depth(self) -> int:
         return len(self.cirq_circuit)
+
+
+@dataclass
+class StatePreparationResultStatistics:
+    id: str
+    results: List[StatePreparationResult]
+
+    def __post_init__(self):
+        # check that
+        target_state_prep_engine = self.results[0].state_prep_engine
+        if not all(
+            res.state_prep_engine == target_state_prep_engine for res in self.results
+        ):
+            raise ValueError("All State Preparation Engine must be same for statistics")
+
+    def _export_to_row_data(self, result_items: List[str]) -> List[str]:
+        # should be exclusively used for rich.table.Table().add_row()
+        if result_items:
+            for item in result_items:
+                if item not in StatePreparationResult.available_result_item:
+                    raise ValueError(f"Invalid Result Item {item}")
+        else:
+            result_items = StatePreparationResult.available_result_item
+
+        sorted_result_items = sorted(
+            result_items, key=lambda x: StatePreparationResult.result_items_rank[x]
+        )
+
+        return [
+            item_result_expr_render(
+                statistics.mean([getattr(res, item) for res in self.results])
+            )
+            for item in sorted_result_items
+        ]

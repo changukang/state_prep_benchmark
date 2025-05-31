@@ -51,6 +51,9 @@ class StatePreparationBase(ABC):
         state_vector: np.ndarray,
     ) -> StatePreparationResult: ...
 
+    @abstractmethod
+    def __eq__(self, value) -> bool: ...
+
 
 class LowRankStatePrep(StatePreparationBase):
     # implementation of https://arxiv.org/abs/2111.03132
@@ -81,6 +84,9 @@ class LowRankStatePrep(StatePreparationBase):
     def name(self):
         return "Low Rank"
 
+    def __eq__(self, value):
+        return type(self) == type(value)
+
 
 class IsometryBased(StatePreparationBase):
     # qiskit implementation of https://arxiv.org/abs/1501.06911
@@ -98,7 +104,7 @@ class IsometryBased(StatePreparationBase):
         assert isinstance(transpiled_qiskit_qc, qiskit.QuantumCircuit)
 
         return StatePreparationResult(
-            state_prep_engine=type(self),
+            state_prep_engine=self,
             target_sv=state_vector,
             circuit=transpiled_qiskit_qc,
             elapsed_time=time(),
@@ -107,3 +113,6 @@ class IsometryBased(StatePreparationBase):
     @property
     def name(self):
         return "Isometry"
+
+    def __eq__(self, value):
+        return type(self) == type(value)

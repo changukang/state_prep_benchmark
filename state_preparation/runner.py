@@ -23,14 +23,12 @@ def color_generator():
 def run_state_preparations(
     state_vectors: Union[List[np.ndarray], List[StateVectorWithInfo]],
     state_preparations: List[StatePreparationBase],
-    result_items: Optional[List[str]] = None,
+    result_items: Optional[List[str]] = AVAILABLE_RESULT_ITEMS,
 ) -> None:
     if result_items:
         for item in result_items:
             if item not in AVAILABLE_RESULT_ITEMS:
                 raise ValueError(f"Invalid Result Item {item}")
-    else:
-        result_items = AVAILABLE_RESULT_ITEMS
 
     if not (
         all(isinstance(state_vector, np.ndarray) for state_vector in state_vectors)
@@ -81,38 +79,10 @@ def run_state_preparations(
                 )
                 data_to_append = state_prep_result._export_to_row_data(result_items)
             except InvalidStatePreparationResult:
-                data_to_append = ["NA"] * len(result_items)
+                data_to_append = ["N/A"] * len(result_items)
             assert data_to_append
-            row_data += state_prep_result._export_to_row_data(result_items)
+            row_data += data_to_append
         table.add_row(*row_data)
 
     console = Console()
     console.print("\n", table)
-
-
-def run_benchmark(
-    bechmark_id: str, num_qubit_range: str, qclib: bool = False, low_rank: bool = False
-):
-    """Runs state preparation for benchmark quantum states.
-
-    Args:
-        benchmark_id (str): The identifier for the benchmark state vector.
-            Currently, only `balanced_hamming_weight` is supported.
-        num_qubit_range (str): The range of qubit numbers for the benchmark state.
-            Must be in the format `X-Y`, where `X` and `Y` are integers such that `X < Y`.
-            For example, specifying `4-6` will run state preparation for quantum states
-            with 4, 5, and 6 qubits.
-    """
-    raise NotImplementedError
-    # if bechmark_id not in AVAILABLE_BENCHMARKS:
-    #     raise ValueError(
-    #         f"Invalid benchmakr {bechmark_id}. "
-    #         f"Must be one of {list(AVAILABLE_BENCHMARKS.keys())}"
-    #     )
-    # def parse_qubit_range(qubit_range_str: str) -> Tuple[int, int]:
-    #     split = qubit_range_str.split("-")
-    #     return (int(split[0]), int(split[1]))
-
-
-def run_random_state():
-    raise NotImplementedError

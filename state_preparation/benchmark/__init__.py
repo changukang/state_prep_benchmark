@@ -1,3 +1,3 @@
-from .states import BalancedHammingWeight, HeadZeroSuperposition
+from .states import BalancedHammingWeight, HeadZeroSuperposition, Unary
 
-__all__ = [BalancedHammingWeight, HeadZeroSuperposition]
+__all__ = [BalancedHammingWeight, HeadZeroSuperposition, Unary]

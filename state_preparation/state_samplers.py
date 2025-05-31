@@ -14,6 +14,9 @@ def get_random_state(num_qubit: int, seed: Optional[int] = None) -> np.ndarray:
 def get_random_sparse_state(
     num_qubit: int, sparsity: int, seed: Optional[int] = None
 ) -> np.ndarray:
+    if sparsity <= 0:
+        raise ValueError("Invalid input; Sparsity must be bigger than 0")
+
     if 2**num_qubit < sparsity:
         raise ValueError(
             "Sparsity stads for number of non-zero terms in the state. "

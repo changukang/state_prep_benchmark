@@ -2,7 +2,6 @@ from typing import List, Optional
 
 import cirq
 import numpy as np
-from numpy.random import random_sample
 
 from state_preparation.utils import is_orthogonal
 
@@ -14,27 +13,17 @@ def get_random_state(num_qubit: int, seed: Optional[int] = None) -> np.ndarray:
 def get_random_sparse_state(
     num_qubit: int, sparsity: int, seed: Optional[int] = None
 ) -> np.ndarray:
-    if sparsity <= 0:
-        raise ValueError("Invalid input; Sparsity must be bigger than 0")
+    if not (0 < sparsity <= 2**num_qubit):
+        raise ValueError("sparsity must be in the range (0, 2**num_qubit]")
 
-    if 2**num_qubit < sparsity:
-        raise ValueError(
-            "Sparsity stads for number of non-zero terms in the state. "
-            "Hence. must be sparsity < 2**num_qubit."
-        )
-    np.random.seed(seed)
-    non_zero_terms = np.random.choice(
-        list(range(2**num_qubit)), size=sparsity, replace=False
-    ).tolist()
-    assert len(non_zero_terms) == sparsity
+    rng = np.random.default_rng(seed)
+    non_zero_terms = rng.choice(2**num_qubit, size=sparsity, replace=False)
+    random_complex = rng.random(sparsity) + 1j * rng.random(sparsity)
 
-    random_complex = random_sample((len(non_zero_terms),)) + 1j * random_sample(
-        (len(non_zero_terms),)
-    )
-    sv_building = np.zeros(shape=(2**num_qubit,), dtype=np.complex128)
-    for non_zero_term, amplitude in zip(non_zero_terms, random_complex):
-        sv_building[non_zero_term] = amplitude
-    sv = sv_building / np.linalg.norm(sv_building)
+    sv = np.zeros(2**num_qubit, dtype=np.complex128)
+    sv[non_zero_terms] = random_complex
+    sv /= np.linalg.norm(sv)
+
     cirq.validate_normalized_state_vector(sv, qid_shape=(2**num_qubit,))
     return sv
 

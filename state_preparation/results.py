@@ -34,6 +34,7 @@ class StatePreparationResult:
     target_sv: np.ndarray
     circuit: Union[cirq.Circuit, qiskit.QuantumCircuit]
     elapsed_time: float
+    skip_qc_validation: bool = False
 
     available_result_item: ClassVar[List[str]] = AVAILABLE_RESULT_ITEMS
     result_items_rank: ClassVar[Dict[str, int]] = {
@@ -64,7 +65,8 @@ class StatePreparationResult:
             else self.circuit
         )
         normalized_cirq_qc = cirq.merge_single_qubit_gates_to_phxz(cirq_circuit)
-        validate_result_cirq_circuit(normalized_cirq_qc)
+        if not self.skip_qc_validation:
+            validate_result_cirq_circuit(normalized_cirq_qc)
         return normalized_cirq_qc
 
     @cached_property

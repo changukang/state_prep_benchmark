@@ -58,6 +58,9 @@ class StatePreparationBase(ABC):
 class LowRankStatePrep(StatePreparationBase):
     # implementation of https://arxiv.org/abs/2111.03132
 
+    def __init__(self, skip_qc_validation: bool = False):
+        self.skip_qc_validation = skip_qc_validation
+
     def _get_result(self, state_vector: np.ndarray) -> StatePreparationResult:
         sv_num_qubit = num_qubit(state_vector)
         if sv_num_qubit < 10:
@@ -72,12 +75,12 @@ class LowRankStatePrep(StatePreparationBase):
             circuit, basis_gates=["u3", "cx"], optimization_level=0
         )
         assert isinstance(transpiled_circuit, qiskit.QuantumCircuit)
-
         return StatePreparationResult(
             state_prep_engine=type(self),
             target_sv=state_vector,
             circuit=transpiled_circuit,
             elapsed_time=time(),
+            skip_qc_validation=self.skip_qc_validation,
         )
 
     @property
@@ -90,6 +93,9 @@ class LowRankStatePrep(StatePreparationBase):
 
 class IsometryBased(StatePreparationBase):
     # qiskit implementation of https://arxiv.org/abs/1501.06911
+
+    def __init__(self, skip_qc_validation: bool = False):
+        self.skip_qc_validation = skip_qc_validation
 
     def _get_result(self, state_vector: np.ndarray):
         qiskit_qc = qiskit.QuantumCircuit(num_qubit(state_vector))
@@ -108,6 +114,7 @@ class IsometryBased(StatePreparationBase):
             target_sv=state_vector,
             circuit=transpiled_qiskit_qc,
             elapsed_time=time(),
+            skip_qc_validation=self.skip_qc_validation,
         )
 
     @property

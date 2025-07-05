@@ -53,3 +53,6 @@ pythonpath = [
 
 [tool.ruff]
 exclude = ["qclib"]
+
+[tool.ty.src]
+exclude = ["qclib"]

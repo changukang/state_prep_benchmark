@@ -29,13 +29,13 @@ def get_random_sparse_state(
 
 
 def get_random_basis_state_vectors(
-    num_qubit: int, num_basis: int, seed: int = None
+    num_qubit: int, num_basis: int, seed: Optional[int] = None
 ) -> List[np.ndarray]:
     rand_unitary = cirq.testing.random_unitary(dim=2**num_qubit, random_state=seed)
     ret = [rand_unitary[:, i] for i in range(num_basis)]
 
     for r in ret:
-        cirq.validate_normalized_state_vector(r, qid_shape=(2**num_qubit))
+        cirq.validate_normalized_state_vector(r, qid_shape=(2**num_qubit,))
 
     assert is_orthogonal(ret)
 

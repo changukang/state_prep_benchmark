@@ -22,7 +22,7 @@ def run_random_sparse_benchmark(
     state_preparations: List[StatePreparationBase],
     num_sample: int = 10,
     seed: int = 2025,
-    result_items: Optional[List[str]] = AVAILABLE_RESULT_ITEMS,
+    result_items: List[str] = AVAILABLE_RESULT_ITEMS,
 ):
 
     table = Table(title="State Preparation Result in Statistics")

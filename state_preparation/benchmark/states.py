@@ -74,6 +74,6 @@ class Unary(BenchmarkStateVector):
 
         sv_building /= np.linalg.norm(sv_building)
 
-        cirq.validate_normalized_state_vector(sv_building, qid_shape=(2**num_qubit))
+        cirq.validate_normalized_state_vector(sv_building, qid_shape=(2**num_qubit,))
 
         return sv_building

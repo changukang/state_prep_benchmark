@@ -9,9 +9,11 @@ from qiskit import transpile
 from qiskit.exceptions import QiskitError
 
 from qclib.state_preparation import LowRankInitialize
+from qiskit.quantum_info.states.statevector import Statevector
 
 from .results import StatePreparationResult
 from .utils import catchtime, num_qubit
+import qiskit.circuit.library
 
 logger = logging.getLogger(__name__)
 QISKIT = "qiskit"
@@ -76,7 +78,7 @@ class LowRankStatePrep(StatePreparationBase):
         )
         assert isinstance(transpiled_circuit, qiskit.QuantumCircuit)
         return StatePreparationResult(
-            state_prep_engine=type(self),
+            state_prep_engine=self,
             target_sv=state_vector,
             circuit=transpiled_circuit,
             elapsed_time=time(),
@@ -100,7 +102,7 @@ class IsometryBased(StatePreparationBase):
     def _get_result(self, state_vector: np.ndarray):
         qiskit_qc = qiskit.QuantumCircuit(num_qubit(state_vector))
         qiskit_qc.append(
-            qiskit.circuit.library.StatePreparation(params=state_vector),
+            qiskit.circuit.library.StatePreparation(params=Statevector(data=state_vector)),
             range(num_qubit(state_vector)),
         )
         with catchtime() as time:

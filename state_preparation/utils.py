@@ -5,8 +5,8 @@ from typing import List
 import cirq
 import numpy as np
 
-
 def keep_ftn_for_cirq_decompose(gate_op: cirq.Operation):
+    assert gate_op.gate
     if gate_op.gate.num_qubits() == 1:
         return True
     elif gate_op.gate.num_qubits() == 2:
@@ -35,7 +35,7 @@ def num_cnot_for_cirq_circuit(qc: cirq.Circuit) -> int:
             cnt += 1
         elif gate_op._num_qubits_() == 1:
             continue
-        elif isinstance(gate_op.gate, cirq.ops.global_phase_op.GlobalPhaseGate):
+        elif isinstance(gate_op.gate, cirq.GlobalPhaseGate):
             continue
         else:
             raise ValueError(
@@ -52,7 +52,7 @@ def validate_result_cirq_circuit(circuit: cirq.Circuit):
                 raise ValueError(f"Invalid two-qubit gate encountered {gate_op}")
         elif gate_op._num_qubits_() == 1:
             continue
-        elif isinstance(gate_op.gate, cirq.ops.global_phase_op.GlobalPhaseGate):
+        elif isinstance(gate_op.gate, cirq.GlobalPhaseGate):
             continue
         else:
             raise ValueError(

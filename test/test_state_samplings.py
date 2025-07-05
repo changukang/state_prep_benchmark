@@ -10,7 +10,8 @@ def test_random_state():
 
 def test_random_sparse_statea():
     for seed in range(10):
-        get_random_sparse_state(num_qubit=5, sparsity=3, seed=seed)
+        sv = get_random_sparse_state(num_qubit=5, sparsity=3, seed=seed)
+        assert (sv != 0).sum() == 3
 
 
 def test_random_basis_state_vectors():

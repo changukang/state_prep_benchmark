@@ -31,7 +31,7 @@ def get_random_sparse_state(
     random_complex = random_sample((len(non_zero_terms),)) + 1j * random_sample(
         (len(non_zero_terms),)
     )
-    sv_building = np.zeros(shape=(2**num_qubit,))
+    sv_building = np.zeros(shape=(2**num_qubit,), dtype=np.complex128)
     for non_zero_term, amplitude in zip(non_zero_terms, random_complex):
         sv_building[non_zero_term] = amplitude
     sv = sv_building / np.linalg.norm(sv_building)

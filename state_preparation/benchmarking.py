@@ -1,15 +1,12 @@
 import logging
-from typing import List, Optional, Union
+from typing import List, Optional
 
-import numpy as np
 from rich.console import Console
 from rich.table import Table
 
-from .algorithms import InvalidStatePreparationResult, StatePreparationBase
-from .benchmark.states import BalancedHammingWeight
+from .algorithms import StatePreparationBase
 from .results import AVAILABLE_RESULT_ITEMS, StatePreparationResultStatistics
 from .state_samplers import get_random_sparse_state
-from .statevector import StateVectorWithInfo
 
 logger = logging.getLogger(__name__)
 

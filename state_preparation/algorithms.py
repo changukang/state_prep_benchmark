@@ -85,7 +85,7 @@ class LowRankStatePrep(StatePreparationBase):
         return "Low Rank"
 
     def __eq__(self, value):
-        return type(self) == type(value)
+        return type(self) is type(value)
 
 
 class IsometryBased(StatePreparationBase):
@@ -115,4 +115,4 @@ class IsometryBased(StatePreparationBase):
         return "Isometry"
 
     def __eq__(self, value):
-        return type(self) == type(value)
+        return type(self) is type(value)

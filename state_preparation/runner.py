@@ -78,7 +78,10 @@ def run_state_preparations(
                     else state_vector.state_vector
                 )
                 data_to_append = state_prep_result._export_to_row_data(result_items)
-            except InvalidStatePreparationResult:
+            except InvalidStatePreparationResult as e: 
+                logger.warning(
+                    f"State preparation failed for {state_preparation.name} by {e}"
+                )
                 data_to_append = ["N/A"] * len(result_items)
             assert data_to_append
             row_data += data_to_append

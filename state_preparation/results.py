@@ -50,11 +50,8 @@ class StatePreparationResult:
         else:
             result_items = StatePreparationResult.available_result_item
 
-        sorted_result_items = sorted(
-            result_items, key=lambda x: StatePreparationResult.result_items_rank[x]
-        )
         return [
-            item_result_expr_render(getattr(self, item)) for item in sorted_result_items
+            item_result_expr_render(getattr(self, item)) for item in result_items
         ]
 
     @cached_property

@@ -46,7 +46,7 @@ def run_state_preparations(
 
     if isinstance(state_vectors[0], StateVectorWithInfo):
         sv_info_items = [
-            state_vector.get_info_items() for state_vector in state_vectors # type: ignore
+            state_vector.get_info_items() for state_vector in state_vectors  # type: ignore
         ]
         if any(sv_info_items[0] != x for x in sv_info_items):
             raise ValueError("State vector info items must be all same")

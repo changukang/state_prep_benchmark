@@ -5,15 +5,15 @@ from typing import Optional
 import cirq
 import numpy as np
 import qiskit
+import qiskit.circuit.library
 from qiskit import transpile
 from qiskit.exceptions import QiskitError
-
-from qclib.state_preparation import LowRankInitialize
 from qiskit.quantum_info.states.statevector import Statevector
+
+from qclib.state_preparation import LowRankInitialize, UCGEInitialize
 
 from .results import StatePreparationResult
 from .utils import catchtime, num_qubit
-import qiskit.circuit.library
 
 logger = logging.getLogger(__name__)
 QISKIT = "qiskit"
@@ -93,6 +93,42 @@ class LowRankStatePrep(StatePreparationBase):
         return type(self) is type(value)
 
 
+class UCGEBased(StatePreparationBase):
+    # implementation of https://arxiv.org/abs/2111.03132
+
+    def __init__(self, skip_qc_validation: bool = False):
+        self.skip_qc_validation = skip_qc_validation
+
+    def _get_result(self, state_vector: np.ndarray) -> StatePreparationResult:
+        sv_num_qubit = num_qubit(state_vector)
+        if sv_num_qubit < 10:
+            logger.info(f"State to Prepare : {cirq.dirac_notation(state_vector)}")
+        logger.info(f"Num qubit : {sv_num_qubit}")
+
+        logger.info("Running UCGE")
+        with catchtime() as time:
+            circuit = UCGEInitialize(state_vector).definition
+
+        transpiled_circuit = transpile(
+            circuit, basis_gates=["u3", "cx"], optimization_level=0
+        )
+        assert isinstance(transpiled_circuit, qiskit.QuantumCircuit)
+        return StatePreparationResult(
+            state_prep_engine=self,
+            target_sv=state_vector,
+            circuit=transpiled_circuit,
+            elapsed_time=time(),
+            skip_qc_validation=self.skip_qc_validation,
+        )
+
+    @property
+    def name(self):
+        return "Low Rank"
+
+    def __eq__(self, value):
+        return type(self) is type(value)
+
+
 class IsometryBased(StatePreparationBase):
     # qiskit implementation of https://arxiv.org/abs/1501.06911
 
@@ -102,7 +138,9 @@ class IsometryBased(StatePreparationBase):
     def _get_result(self, state_vector: np.ndarray):
         qiskit_qc = qiskit.QuantumCircuit(num_qubit(state_vector))
         qiskit_qc.append(
-            qiskit.circuit.library.StatePreparation(params=Statevector(data=state_vector)),
+            qiskit.circuit.library.StatePreparation(
+                params=Statevector(data=state_vector)
+            ),
             range(num_qubit(state_vector)),
         )
         with catchtime() as time:

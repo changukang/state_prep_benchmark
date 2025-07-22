@@ -5,6 +5,7 @@ from typing import List
 import cirq
 import numpy as np
 
+
 def keep_ftn_for_cirq_decompose(gate_op: cirq.Operation):
     assert gate_op.gate
     if gate_op.gate.num_qubits() == 1:

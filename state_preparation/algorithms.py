@@ -94,7 +94,7 @@ class LowRankStatePrep(StatePreparationBase):
 
 
 class UCGEBased(StatePreparationBase):
-    # implementation of https://arxiv.org/abs/2111.03132
+    # implementation of https://arxiv.org/abs/2409.05618
 
     def __init__(self, skip_qc_validation: bool = False):
         self.skip_qc_validation = skip_qc_validation
@@ -123,7 +123,7 @@ class UCGEBased(StatePreparationBase):
 
     @property
     def name(self):
-        return "Low Rank"
+        return "UCGE"
 
     def __eq__(self, value):
         return type(self) is type(value)

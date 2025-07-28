@@ -1,4 +1,5 @@
 import math
+from itertools import combinations
 from typing import List
 
 import cirq
@@ -77,3 +78,18 @@ class Unary(BenchmarkStateVector):
         cirq.validate_normalized_state_vector(sv_building, qid_shape=(2**num_qubit,))
 
         return sv_building
+
+
+class Dicke(BenchmarkStateVector):
+    # ref : https://quantumcomputing.stackexchange.com/q/4545/15277
+
+    def __call__(self, n: int, k: int):
+        sv = np.zeros(2**n, dtype=np.complex128)
+        for ones_pos in combinations(range(n), k):
+            idx = 0
+            for pos in ones_pos:
+                idx |= 1 << (n - pos - 1)
+            sv[idx] = 1
+        sv /= np.linalg.norm(sv)
+        cirq.validate_normalized_state_vector(sv, qid_shape=(2**n,))
+        return sv

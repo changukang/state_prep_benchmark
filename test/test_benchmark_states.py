@@ -1,7 +1,7 @@
 import cirq
 import numpy as np
 
-from state_preparation.benchmark.states import (BalancedHammingWeight,
+from state_preparation.benchmark.states import (BalancedHammingWeight, Dicke,
                                                 HeadZeroSuperposition)
 
 ZERO_KET = np.array([1, 0])

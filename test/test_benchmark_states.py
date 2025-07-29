@@ -1,8 +1,12 @@
 import cirq
 import numpy as np
 
-from state_preparation.benchmark.states import (BalancedHammingWeight, Dicke,
-                                                HeadZeroSuperposition)
+from state_preparation.benchmark.states import (
+    PreBHWState,
+    BalancedHammingWeight,
+    Dicke,
+    HeadZeroSuperposition,
+)
 
 ZERO_KET = np.array([1, 0])
 ONE_KET = np.array([0, 1])
@@ -53,3 +57,11 @@ def test_head_zero_superposition():
             )
         ),
     ).all()
+
+def test_pre_bhw_state():
+    pre_bhw = PreBHWState()
+
+    sv = pre_bhw(n=6)  
+
+    print(cirq.dirac_notation(sv))
+    

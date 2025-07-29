@@ -1,8 +1,7 @@
 import cirq
 import numpy as np
 
-from state_preparation.algorithms import (IsometryBased, LowRankStatePrep,
-                                          UCGEBased)
+from state_preparation.algorithms import IsometryBased, LowRankStatePrep, UCGEBased
 from state_preparation.results import StatePreparationResult
 from state_preparation.state_samplers import get_random_state
 

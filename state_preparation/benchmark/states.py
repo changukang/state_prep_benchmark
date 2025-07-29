@@ -93,3 +93,27 @@ class Dicke(BenchmarkStateVector):
         sv /= np.linalg.norm(sv)
         cirq.validate_normalized_state_vector(sv, qid_shape=(2**n,))
         return sv
+
+
+def hamming_weight(x: int) -> int:
+    return bin(x).count("1")
+
+
+class PreBHWState(BenchmarkStateVector):
+
+    def __call__(self, n: int):
+        assert n % 2 == 0
+        sv = np.zeros(shape=(2**n,), dtype=np.complex128)
+        for i in range(2**int(n / 2)):
+            left_term = cirq.one_hot(
+                index=i, shape=(2 ** (n //2),), dtype=np.complex128
+            )
+            right_term = cirq.one_hot(
+                index=sum(2**i for i in range(hamming_weight(i))),
+                shape=(2 ** (n //2),),
+                dtype=np.complex128,
+            )
+            sv += cirq.kron(left_term, right_term).reshape(-1)
+
+        sv /= np.linalg.norm(sv)
+        return sv

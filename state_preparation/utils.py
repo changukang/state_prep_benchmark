@@ -79,3 +79,7 @@ def is_orthogonal(basis: List[np.ndarray]) -> bool:
             if not np.isclose(np.vdot(curr, other), 0):
                 return False
     return True
+
+
+def sparsity(sv: np.ndarray) -> int:
+    return np.count_nonzero(sv)

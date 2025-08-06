@@ -4,7 +4,6 @@ import numpy as np
 from state_preparation.benchmark.states import (
     PreBHWState,
     BalancedHammingWeight,
-    Dicke,
     HeadZeroSuperposition,
 )
 

@@ -6,6 +6,7 @@ import cirq
 import numpy as np
 
 from .abstract import BenchmarkStateVector
+from .dicke_util import dicke_U_n_k
 
 
 class BalancedHammingWeight(BenchmarkStateVector):
@@ -23,6 +24,7 @@ class BalancedHammingWeight(BenchmarkStateVector):
 
     def __call__(self, n: int):
         sv = np.zeros(shape=(2**n,))
+        assert n % 2 == 0, "n must be even"
 
         valid_indices = []
         for i in range(2**n):
@@ -38,6 +40,60 @@ class BalancedHammingWeight(BenchmarkStateVector):
             sv[idx] = norm_factor
 
         return sv
+
+    def get_known_circuit(self, n: int) -> cirq.Circuit:
+
+        raise NotImplementedError(
+            "State preparation before dicke-state application needs to be reconsidered."
+        )
+
+        def get_bindary_diff_X_strings(
+            bin1: str, bin2: str, qbits: List[cirq.LineQubit]
+        ) -> List[cirq.GateOperation]:
+            assert len(bin1) == len(bin2), "Binary strings must be of the same length"
+            assert len(bin1) == len(
+                qbits
+            ), "Number of qubits must match the length of binary strings"
+            ret = []
+            for elt1, elt2 in zip(bin1, bin2):
+                if elt1 != elt2:
+                    ret.append(cirq.X(qbits[bin1.index(elt1)]))
+            return ret
+
+        def int_to_bin_str(x: int, length: int) -> str:
+            return bin(x)[2:].zfill(length)
+
+        def get_pivotal_binary(hamming_weight: int, num_qubit: int) -> str:
+            return "0" * (num_qubit - hamming_weight) + "1" * hamming_weight
+
+        assert n % 2 == 0, "n must be even"
+
+        qc = cirq.Circuit()
+        qbits = cirq.LineQubit.range(n)
+        qc.append([cirq.H(qbits[i]) for i in range(n // 2)])
+        qc.append([cirq.CX(qbits[i], qbits[i + n // 2]) for i in range(n // 2)])
+
+        for i in range(2 ** (n // 2)):
+            hamming_weight = bin(i).count("1")
+            curr_binary = int_to_bin_str(i, n // 2)
+            pivotal = get_pivotal_binary(hamming_weight, n // 2)
+            if curr_binary != pivotal:
+                qc.append(
+                    [
+                        x_string.controlled_by(
+                            *qbits[: n // 2],
+                            control_values=[int(x) for x in curr_binary],
+                        )
+                        for x_string in get_bindary_diff_X_strings(
+                            curr_binary, pivotal, qbits[n // 2 :]
+                        )
+                    ]
+                )
+
+        dicke_part = cirq.Circuit(dicke_U_n_k(n // 2, n // 2 - 1))
+        dicke_part = dicke_part.transform_qubits(lambda q: q + n // 2)
+        qc.append(dicke_part)
+        return qc
 
 
 class HeadZeroSuperposition(BenchmarkStateVector):
@@ -104,13 +160,13 @@ class PreBHWState(BenchmarkStateVector):
     def __call__(self, n: int):
         assert n % 2 == 0
         sv = np.zeros(shape=(2**n,), dtype=np.complex128)
-        for i in range(2**int(n / 2)):
+        for i in range(2 ** int(n / 2)):
             left_term = cirq.one_hot(
-                index=i, shape=(2 ** (n //2),), dtype=np.complex128
+                index=i, shape=(2 ** (n // 2),), dtype=np.complex128
             )
             right_term = cirq.one_hot(
                 index=sum(2**i for i in range(hamming_weight(i))),
-                shape=(2 ** (n //2),),
+                shape=(2 ** (n // 2),),
                 dtype=np.complex128,
             )
             sv += cirq.kron(left_term, right_term).reshape(-1)

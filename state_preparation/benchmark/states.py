@@ -1,6 +1,6 @@
 import math
 from itertools import combinations
-from typing import List
+from typing import List, Set
 
 import cirq
 import numpy as np
@@ -114,6 +114,18 @@ class HeadZeroSuperposition(BenchmarkStateVector):
         cirq.validate_normalized_state_vector(sv_building, qid_shape=(2**num_qubit))
 
         return sv_building
+
+
+class SubsetSuperposition(BenchmarkStateVector):
+    # https://quantumcomputing.stackexchange.com/questions/27864/creating-a-uniform-superposition-of-a-subset-of-basis-states/39868
+    def __call__(self, n: int, subset: Set[int]):
+        assert all(0 <= i < 2**n - 1 for i in subset)
+        sv = np.zeros(2**n, dtype=np.complex128)
+        for idx in subset:
+            sv[idx] = 1
+        sv /= np.linalg.norm(sv)
+        cirq.validate_normalized_state_vector(sv, qid_shape=(2**n,))
+        return sv
 
 
 class Unary(BenchmarkStateVector):

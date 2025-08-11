@@ -1,11 +1,9 @@
 import cirq
 import numpy as np
 
-from state_preparation.benchmark.states import (
-    PreBHWState,
-    BalancedHammingWeight,
-    HeadZeroSuperposition,
-)
+from state_preparation.benchmark.states import (BalancedHammingWeight,
+                                                HeadZeroSuperposition,
+                                                SubsetSuperposition)
 
 ZERO_KET = np.array([1, 0])
 ONE_KET = np.array([0, 1])
@@ -57,10 +55,12 @@ def test_head_zero_superposition():
         ),
     ).all()
 
-def test_pre_bhw_state():
-    pre_bhw = PreBHWState()
 
-    sv = pre_bhw(n=6)  
+def test_subset_superposition():
+    subset_superposition = SubsetSuperposition()
 
-    print(cirq.dirac_notation(sv))
-    
+    sv = subset_superposition(n=3, subset={0, 2})
+    assert np.isclose(sv, (1 / np.sqrt(2)) * np.array([1, 0, 1, 0, 0, 0, 0, 0])).all()
+
+    sv = subset_superposition(n=3, subset={1, 3, 5})
+    assert np.isclose(sv, (1 / np.sqrt(3)) * np.array([0, 1, 0, 1, 0, 1, 0, 0])).all()

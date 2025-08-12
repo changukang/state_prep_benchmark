@@ -1,6 +1,6 @@
 import inspect
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Any, Dict
 
 
 class BenchmarkStateVector(ABC):
@@ -22,9 +22,12 @@ class BenchmarkStateVector(ABC):
             result.append((name, annotation))
         return result
 
-    @classmethod
-    @abstractmethod
-    def sample_parameters(cls, seed: int) -> Dict[str, int]: ...
-
     @abstractmethod
     def __call__(self, *args, **kwds): ...
+
+
+class BenchmarkStateVectorWithParameters(BenchmarkStateVector):
+
+    @classmethod
+    @abstractmethod
+    def sample_parameters(cls, *args, **kwargs) -> Dict[str, Any]: ...

@@ -1,13 +1,14 @@
 import math
 import random
-from itertools import combinations
-from typing import Any, Dict, List, Set
+from itertools import combinations, permutations
+from typing import Any, Dict, List, Sequence, Set, Tuple
 
 import cirq
 import numpy as np
 
-from .abstract import BenchmarkStateVector
+from .abstract import BenchmarkStateVector, BenchmarkStateVectorWithParameters
 from .dicke_util import dicke_U_n_k
+from .utils import apply_perm_to_edges, graph_to_bit_string
 
 
 class BalancedHammingWeight(BenchmarkStateVector):
@@ -22,9 +23,6 @@ class BalancedHammingWeight(BenchmarkStateVector):
     n: 4 -> 0000, 0101, 0110, 1001, 1010, 1111
     n: 6 -> 000000, 001001, 001010, 001100, 010001, 010010, 010100, 100001, 100010, 100100, 011011, 011101, 011110, 101011, 101101, 101110, 110011, 110101, 110110, 111111
     """
-
-    def sample_parameters(cls, n: int, seed: int) -> Dict[str, Any]:
-        return {}
 
     def __call__(self, n: int):
         sv = np.zeros(shape=(2**n,))
@@ -103,9 +101,6 @@ class BalancedHammingWeight(BenchmarkStateVector):
 class HeadZeroSuperposition(BenchmarkStateVector):
     # ref : https://quantumcomputing.stackexchange.com/q/4545/15277
 
-    def sample_parameters(cls, n: int, seed: int) -> Dict[str, Any]:
-        return {}
-
     def __call__(self, n: int, m: int):
 
         req_num_qubit = math.ceil(np.log2(m + 1))
@@ -125,7 +120,7 @@ class HeadZeroSuperposition(BenchmarkStateVector):
         return sv_building
 
 
-class SubsetSuperposition(BenchmarkStateVector):
+class SubsetSuperposition(BenchmarkStateVectorWithParameters):
     # https://quantumcomputing.stackexchange.com/questions/27864/creating-a-uniform-superposition-of-a-subset-of-basis-states/39868
 
     @classmethod
@@ -145,6 +140,69 @@ class SubsetSuperposition(BenchmarkStateVector):
         return sv
 
 
+class PermutationSuperposition(BenchmarkStateVectorWithParameters):
+
+    @classmethod
+    def sample_parameters(cls, n: int, seed: int) -> Dict[str, Any]:
+        raise NotImplementedError()
+
+    def __call__(self, n: int, subset: Set[int]):
+        assert all(0 <= i < 2**n - 1 for i in subset)
+        sv = np.zeros(2**n, dtype=np.complex128)
+        for idx in subset:
+            sv[idx] = 1
+        sv /= np.linalg.norm(sv)
+        cirq.validate_normalized_state_vector(sv, qid_shape=(2**n,))
+        return sv
+
+
+def bit_string_to_quantum_state(bit_string: Sequence[int]) -> np.ndarray:
+    """
+    Convert a bit string (e.g., '0101') to a quantum state vector (numpy array)
+    with 1 at the corresponding basis index and 0 elsewhere.
+
+    Args:
+        bit_string: A string of '0's and '1's.
+
+    Returns:
+        A numpy array of shape (2**n,) where n = len(bit_string).
+    """
+    n = len(bit_string)
+    index = int("".join(str(b) for b in bit_string), 2)
+    state = np.zeros(2**n, dtype=np.complex128)
+    state[index] = 1.0
+    return state
+
+
+class GraphPermutationSuperposition(BenchmarkStateVectorWithParameters):
+
+    @classmethod
+    def sample_parameters(cls, n: int, seed: int) -> Dict[str, Any]:
+        raise NotImplementedError()
+
+    def __call__(self, n: int, graph_edges: Sequence[Tuple[int, int]]):
+        # Solve m^2 - m = 2n for m > 1
+        # m^2 - m - 2n = 0 => m = (1 + sqrt(1 + 8*n)) / 2
+        discriminant = 1 + 8 * n
+        m = (1 + np.sqrt(discriminant)) / 2
+        # m is the size for graph
+        if m <= 1 or not m.is_integer():
+            raise ValueError("invalid qubit size n for the problem")
+        m = int(m)
+        sv_builder = np.zeros(shape=(2**n), dtype=np.complex128)
+        for perm in permutations(range(m)):
+            sv_builder += np.array(
+                bit_string_to_quantum_state(
+                    graph_to_bit_string(n, apply_perm_to_edges(perm, graph_edges))
+                ),
+                dtype=np.complex128,
+            )
+        sv_builder /= np.linalg.norm(sv_builder)
+        cirq.validate_normalized_state_vector(sv_builder, qid_shape=(2**n,))
+        return sv_builder
+
+
+## Following states may not be used or only for testing purposes.
 class Unary(BenchmarkStateVector):
     # ref : https://quantumcomputing.stackexchange.com/q/4545/15277
 

@@ -127,11 +127,13 @@ class HeadZeroSuperposition(BenchmarkStateVector):
 
 class SubsetSuperposition(BenchmarkStateVector):
     # https://quantumcomputing.stackexchange.com/questions/27864/creating-a-uniform-superposition-of-a-subset-of-basis-states/39868
+
+    @classmethod
     def sample_parameters(cls, n: int, seed: int) -> Dict[str, Any]:
         rng = random.Random(seed)
-        subset_size = rng.randint(1, n)
-        subset = set(random.sample(range(n), subset_size))
-        return {"subset": subset}
+        subset_size = rng.randint(1, 2**n)
+        subset = set(rng.sample(range(2**n), subset_size))
+        return {"n": n, "subset": subset}
 
     def __call__(self, n: int, subset: Set[int]):
         assert all(0 <= i < 2**n - 1 for i in subset)

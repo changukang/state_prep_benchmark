@@ -50,9 +50,7 @@ class StatePreparationResult:
         else:
             result_items = StatePreparationResult.available_result_item
 
-        return [
-            item_result_expr_render(getattr(self, item)) for item in result_items
-        ]
+        return [item_result_expr_render(getattr(self, item)) for item in result_items]
 
     @cached_property
     def cirq_circuit(self) -> cirq.Circuit:

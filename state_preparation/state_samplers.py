@@ -11,14 +11,18 @@ def get_random_state(num_qubit: int, seed: Optional[int] = None) -> np.ndarray:
 
 
 def get_random_sparse_state(
-    num_qubit: int, sparsity: int, seed: Optional[int] = None, complex : bool = True
+    num_qubit: int, sparsity: int, seed: Optional[int] = None, complex: bool = True
 ) -> np.ndarray:
     if not (0 < sparsity <= 2**num_qubit):
         raise ValueError("sparsity must be in the range (0, 2**num_qubit]")
 
     rng = np.random.default_rng(seed)
     non_zero_terms = rng.choice(2**num_qubit, size=sparsity, replace=False)
-    random_complex = rng.random(sparsity) + 1j * rng.random(sparsity) if complex else rng.random(sparsity)
+    random_complex = (
+        rng.random(sparsity) + 1j * rng.random(sparsity)
+        if complex
+        else rng.random(sparsity)
+    )
 
     sv = np.zeros(2**num_qubit, dtype=np.complex128)
     sv[non_zero_terms] = random_complex

@@ -1,6 +1,7 @@
 import math
+import random
 from itertools import combinations
-from typing import List, Set
+from typing import Any, Dict, List, Set
 
 import cirq
 import numpy as np
@@ -21,6 +22,9 @@ class BalancedHammingWeight(BenchmarkStateVector):
     n: 4 -> 0000, 0101, 0110, 1001, 1010, 1111
     n: 6 -> 000000, 001001, 001010, 001100, 010001, 010010, 010100, 100001, 100010, 100100, 011011, 011101, 011110, 101011, 101101, 101110, 110011, 110101, 110110, 111111
     """
+
+    def sample_parameters(cls, n: int, seed: int) -> Dict[str, Any]:
+        return {}
 
     def __call__(self, n: int):
         sv = np.zeros(shape=(2**n,))
@@ -99,25 +103,36 @@ class BalancedHammingWeight(BenchmarkStateVector):
 class HeadZeroSuperposition(BenchmarkStateVector):
     # ref : https://quantumcomputing.stackexchange.com/q/4545/15277
 
-    def __call__(self, m: int):
-        num_qubit = math.ceil(np.log2(m + 1))
+    def sample_parameters(cls, n: int, seed: int) -> Dict[str, Any]:
+        return {}
 
-        sv_building = np.zeros(shape=2**num_qubit, dtype=np.complex128)
-        sv_building += cirq.one_hot(index=0, shape=(2**num_qubit,), dtype=np.complex128)
+    def __call__(self, n: int, m: int):
+
+        req_num_qubit = math.ceil(np.log2(m + 1))
+        assert n >= req_num_qubit
+
+        sv_building = np.zeros(shape=2**n, dtype=np.complex128)
+        sv_building += cirq.one_hot(index=0, shape=(2**n,), dtype=np.complex128)
         for i in range(1, m + 1):
             sv_building += (1 / np.sqrt(m)) * cirq.one_hot(
-                index=i, shape=(2**num_qubit,), dtype=np.complex128
+                index=i, shape=(2**n,), dtype=np.complex128
             )
 
         sv_building /= np.sqrt(2)
 
-        cirq.validate_normalized_state_vector(sv_building, qid_shape=(2**num_qubit))
+        cirq.validate_normalized_state_vector(sv_building, qid_shape=(2**n))
 
         return sv_building
 
 
 class SubsetSuperposition(BenchmarkStateVector):
     # https://quantumcomputing.stackexchange.com/questions/27864/creating-a-uniform-superposition-of-a-subset-of-basis-states/39868
+    def sample_parameters(cls, n: int, seed: int) -> Dict[str, Any]:
+        rng = random.Random(seed)
+        subset_size = rng.randint(1, n)
+        subset = set(random.sample(range(n), subset_size))
+        return {"subset": subset}
+
     def __call__(self, n: int, subset: Set[int]):
         assert all(0 <= i < 2**n - 1 for i in subset)
         sv = np.zeros(2**n, dtype=np.complex128)

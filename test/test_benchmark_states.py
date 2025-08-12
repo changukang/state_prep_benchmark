@@ -39,8 +39,7 @@ def test_balanced_hamming_weight():
 def test_head_zero_superposition():
     balanced_hw = HeadZeroSuperposition()
 
-    # for m = 3, the result state vector is ()
-    sv = balanced_hw(3)
+    sv = balanced_hw(2, 3)
     assert np.isclose(
         sv,
         (1 / np.sqrt(2))

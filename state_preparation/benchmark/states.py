@@ -123,6 +123,14 @@ class HeadZeroSuperposition(BenchmarkStateVector):
 class SubsetSuperposition(BenchmarkStateVectorWithParameters):
     # https://quantumcomputing.stackexchange.com/questions/27864/creating-a-uniform-superposition-of-a-subset-of-basis-states/39868
 
+    def sample_by_sparsity(self, n: int, sparsity: int, seed: int) -> Dict[str, Any]:
+        assert (
+            1 <= sparsity <= 2**n
+        ), "Sparsity must be less than or equal to 2^n and bigger than 0"
+        rng = random.Random(seed)
+        subset = set(rng.sample(range(2**n), sparsity))
+        return self(n=n, subset=subset)
+
     @classmethod
     def sample_parameters(cls, n: int, seed: int) -> Dict[str, Any]:
         rng = random.Random(seed)
@@ -131,7 +139,9 @@ class SubsetSuperposition(BenchmarkStateVectorWithParameters):
         return {"n": n, "subset": subset}
 
     def __call__(self, n: int, subset: Set[int]):
-        assert all(0 <= i < 2**n - 1 for i in subset)
+        assert all(
+            0 <= i <= 2**n - 1 for i in subset
+        ), f"Subset elements must be within the range of 0 to 2^n - 1 where n={n}, however got {subset}"
         sv = np.zeros(2**n, dtype=np.complex128)
         for idx in subset:
             sv[idx] = 1

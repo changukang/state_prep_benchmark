@@ -20,7 +20,7 @@ def color_generator():
     return iter(colors)
 
 
-def run_state_preparations(
+def run_state_preparations_with_result_print(
     state_vectors: Union[List[np.ndarray], List[StateVectorWithInfo]],
     state_preparations: List[StatePreparationBase],
     result_items: List[str] = AVAILABLE_RESULT_ITEMS,
@@ -89,3 +89,10 @@ def run_state_preparations(
 
     console = Console()
     console.print("\n", table)
+
+
+def run_state_preparations(
+    state_vectors: Union[List[np.ndarray], List[StateVectorWithInfo]],
+    state_preparations: List[StatePreparationBase],
+) -> None:
+    raise NotImplementedError

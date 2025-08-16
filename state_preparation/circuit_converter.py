@@ -6,8 +6,10 @@ from cirq.circuits.qasm_output import QasmUGate
 from cirq.contrib.qasm_import import circuit_from_qasm
 
 
-def qiskit2cirq_by_qasm(qasm_str: str) -> cirq.Circuit:
-    raise NotImplementedError()
+def qiskit2cirq_by_qasm(qiskit_qc: qiskit.QuantumCircuit) -> cirq.Circuit:
+    qasm_str = qiskit.qasm2.dumps(qiskit_qc)
+    cirq_qc = circuit_from_qasm(qasm_str)
+    return cirq_qc
 
 
 # TODO : remove following later
@@ -27,16 +29,17 @@ def qiskit2cirq(qiskit_qc: qiskit.QuantumCircuit, do_reverse=False) -> cirq.Circ
                 float(phi) / np.pi,
                 float(lam) / np.pi,
             )
-            qubit = cirq.LineQubit(gate.qubits[0]._index)
+            qubit = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
 
             cirq_qc.append(QasmUGate(theta, phi, lam)(qubit))
         elif gate[0].name == "cx":
-            control = cirq.LineQubit((gate.qubits[0]._index))
-            target = cirq.LineQubit((gate.qubits[1]._index))
-
+            control = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
+            target = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[1]))
             cirq_qc.append(cirq.CNOT(control, target))
         else:
             raise ValueError("Unexpected gate type: {}".format(gate))
+    # TODO : remove following do_reverse routine for generality
+    # either call of qclib or qiskit should handle the endian consistency
     if do_reverse:
         qubits = cirq.LineQubit.range(len(qiskit_qc.qubits))
         rev_qubits = list(reversed(qubits))

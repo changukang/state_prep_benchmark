@@ -73,10 +73,11 @@ class LowRankStatePrep(StatePreparationBase):
         with catchtime() as time:
             circuit = LowRankInitialize(state_vector).definition
 
+        assert isinstance(circuit, qiskit.QuantumCircuit)
         transpiled_circuit = transpile(
             circuit, basis_gates=["u3", "cx"], optimization_level=0
         )
-        assert isinstance(transpiled_circuit, qiskit.QuantumCircuit)
+
         return StatePreparationResult(
             state_prep_engine=self,
             target_sv=state_vector,

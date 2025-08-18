@@ -25,11 +25,12 @@ dependencies = [
 force-exclude = '''
 	/(
 	| qclib
+	| quantum-xyz
 	)/
 '''
 
 [tool.isort]
-skip = ["qclib"]
+skip = ["qclib", "quantum-xyz"]
 
 [tool.mypy]
 exclude = "^(qclib/)"
@@ -52,7 +53,7 @@ pythonpath = [
 ]
 
 [tool.ruff]
-exclude = ["qclib"]
+exclude = ["qclib", "quantum-xyz"]
 
 [tool.ty.src]
-exclude = ["qclib"]
+exclude = ["qclib", "quantum-xyz"]

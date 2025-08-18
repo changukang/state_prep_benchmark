@@ -47,7 +47,7 @@ include = ["state_preparation*"]
 
 [tool.pytest.ini_options]
 testpaths = ["test"]  
-norecursedirs = ["qclib"]
+norecursedirs = ["qclib", "quantum-xyz"]
 pythonpath = [
   "."
 ]

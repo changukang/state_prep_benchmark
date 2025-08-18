@@ -6,6 +6,7 @@ import cirq
 import numpy as np
 import qiskit
 import qiskit.circuit.library
+import xyz
 from qiskit import transpile
 from qiskit.exceptions import QiskitError
 from qiskit.quantum_info.states.statevector import Statevector
@@ -161,6 +162,50 @@ class IsometryBased(StatePreparationBase):
     @property
     def name(self):
         return "Isometry"
+
+    def __eq__(self, value):
+        return type(self) is type(value)
+
+
+class XYZ(StatePreparationBase):
+
+    def __init__(self, skip_qc_validation: bool = False):
+        self.skip_qc_validation = skip_qc_validation
+
+    def _get_result(self, state_vector: np.ndarray):
+        if np.iscomplexobj(state_vector) and np.any(np.imag(state_vector) != 0):
+            raise ValueError(
+                "State vector contains non-real elements; XYZ algorithm does not support complex-valued state vectors."
+            )
+
+        with catchtime() as time:
+            logger.info("Starting XYZ")
+            param = xyz.StatePreparationParameters(
+                enable_compression=False,
+                enable_m_flow=True,
+                enable_n_flow=False,
+                enable_exact_synthesis=True,
+            )
+
+            qc = xyz.prepare_state(
+                state_vector, verbose_level=0, map_gates=True, param=param
+            )
+            logger.info(f"CNOT cost {qc.get_cnot_cost()}")
+        qiskit_qc = xyz.to_qiskit(qc)
+        transpiled_circuit = transpile(
+            qiskit_qc, basis_gates=["u3", "cx"], optimization_level=0
+        )
+        return StatePreparationResult(
+            state_prep_engine=self,
+            target_sv=state_vector,
+            circuit=transpiled_circuit,
+            elapsed_time=time(),
+            skip_qc_validation=self.skip_qc_validation,
+        )
+
+    @property
+    def name(self):
+        return "XYZ"
 
     def __eq__(self, value):
         return type(self) is type(value)

@@ -28,6 +28,13 @@ class InvalidStatePreparationResult(Exception):
         super().__init__(msg)
 
 
+class NumericalComputationError(Exception):
+
+    def __init__(self, e: Optional[Exception] = None):
+        msg = f"Exception was raised : {e}"
+        super().__init__(msg)
+
+
 class StatePreparationBase(ABC):
 
     def run(self, state_vector: np.ndarray) -> StatePreparationResult:

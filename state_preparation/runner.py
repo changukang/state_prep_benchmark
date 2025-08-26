@@ -5,7 +5,11 @@ import numpy as np
 from rich.console import Console
 from rich.table import Table
 
-from .algorithms import InvalidStatePreparationResult, StatePreparationBase
+from .algorithms import (
+    InvalidStatePreparationResult,
+    StatePreparationBase,
+    NumericalComputationError,
+)
 from .benchmark.states import BalancedHammingWeight
 from .results import AVAILABLE_RESULT_ITEMS
 from .statevector import StateVectorWithInfo
@@ -78,7 +82,7 @@ def run_state_preparations_with_result_print(
                     else state_vector.state_vector
                 )
                 data_to_append = state_prep_result._export_to_row_data(result_items)
-            except InvalidStatePreparationResult as e:
+            except (InvalidStatePreparationResult, NumericalComputationError) as e:
                 logger.warning(
                     f"State preparation failed for {state_preparation.name} by {e}"
                 )

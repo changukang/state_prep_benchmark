@@ -5,11 +5,8 @@ import numpy as np
 from rich.console import Console
 from rich.table import Table
 
-from .algorithms import (
-    InvalidStatePreparationResult,
-    StatePreparationBase,
-    NumericalComputationError,
-)
+from .algorithms import (InvalidStatePreparationResult,
+                         NumericalComputationError, StatePreparationBase)
 from .benchmark.states import BalancedHammingWeight
 from .results import AVAILABLE_RESULT_ITEMS
 from .statevector import StateVectorWithInfo

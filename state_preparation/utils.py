@@ -81,5 +81,5 @@ def is_orthogonal(basis: List[np.ndarray]) -> bool:
     return True
 
 
-def sparsity(sv: np.ndarray) -> int:
-    return np.count_nonzero(sv)
+def sparsity(sv: np.ndarray, atol=1e-07) -> int:
+    return np.count_nonzero(np.abs(sv) > atol)

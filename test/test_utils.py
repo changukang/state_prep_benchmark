@@ -1,4 +1,5 @@
-from state_preparation.benchmark.utils import apply_perm_to_edges, graph_to_bit_string
+from state_preparation.benchmark.utils import (apply_perm_to_edges,
+                                               graph_to_bit_string)
 
 
 def test_graph_to_bit_string():

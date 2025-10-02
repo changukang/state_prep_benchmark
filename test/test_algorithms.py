@@ -2,9 +2,11 @@ import cirq
 import numpy as np
 import pytest
 
-from state_preparation.algorithms import XYZ, IsometryBased, LowRankStatePrep, UCGEBased
+from state_preparation.algorithms import (XYZ, IsometryBased, LowRankStatePrep,
+                                          UCGEBased)
 from state_preparation.results import StatePreparationResult
-from state_preparation.state_samplers import get_random_sparse_state, get_random_state
+from state_preparation.state_samplers import (get_random_sparse_state,
+                                              get_random_state)
 
 
 def test_low_rank():

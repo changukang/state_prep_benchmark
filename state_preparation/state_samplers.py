@@ -1,3 +1,4 @@
+from multiprocessing import Value
 from turtle import shearfactor
 from typing import List, Optional, Sequence
 
@@ -63,33 +64,51 @@ def random_core(rank_vector: Sequence[int], seed: int = None):
 
 
 def get_random_state_by_rank_vector(
-    qubit_partition: Sequence[int], rank_vector: Sequence[int], seed: int = None
-):
-    num_qubit = sum(qubit_partition)
-    sampled_core = random_core(rank_vector, seed)
-    sv_builder = np.zeros(shape=(2**num_qubit,), dtype=np.complex128)
+    num_qubits_per_partition: Sequence[int], ranks: Sequence[int], seed: int = None
+) -> np.ndarray:
+    """
+    Generalized random Tucker tensor generator.
 
-    for core_idx in np.ndindex(*rank_vector):
-        elt = sampled_core[core_idx]
+    shape: tuple of ints, e.g. (n1, n2, ..., nk)
+    ranks: tuple of ints, e.g. (d1, d2, ..., dk), same length as shape
+    seed: optional random seed
+    """
 
-        to_kron = [
-            cirq.one_hot(
-                index=basis_idx,
-                shape=(2 ** (qubit_partition[part_idx]),),
-                dtype=np.complex128,
-            )
-            for part_idx, basis_idx in enumerate(core_idx)
-        ]
-        basis_term_on_elt = cirq.kron(*to_kron, shape_len=1)
-        sv_builder += elt * basis_term_on_elt
+    if len(ranks) == 2 and len(set(ranks)) != 1:
+        raise ValueError("For order-2 tensors, ranks must be the same.")
 
-    rand_part_unitaries = [
-        cirq.testing.random_unitary(dim=2**part_qubit_num, random_state=seed + idx)
-        for idx, part_qubit_num in enumerate(qubit_partition)
-    ]
-    unitary_to_mult = cirq.kron(*rand_part_unitaries, shape_len=2)
-    sv_builder = unitary_to_mult @ sv_builder
+    if len(ranks) == 1:
+        raise ValueError("For rank-1 tensors, use get_random_state instead.")
 
-    cirq.validate_normalized_state_vector(sv_builder, qid_shape=(2**num_qubit,))
+    rng = np.random.default_rng(seed)
+    order = len(num_qubits_per_partition)
 
-    return sv_builder
+    if len(ranks) != order:
+        raise ValueError("shape and ranks must have the same length")
+
+    # core tensor
+    G = rng.standard_normal(size=ranks)
+
+    # random orthogonal factor matrices
+    Us = []
+    shapes = [2**n for n in num_qubits_per_partition]
+    for n, d in zip(shapes, ranks):
+        U, _ = np.linalg.qr(rng.standard_normal((n, d)))
+        Us.append(U)
+
+    # apply mode-k products
+    T = G
+    for mode, U in enumerate(Us):
+        # tensordot along the 'mode' dimension of core with columns of U
+        T = np.tensordot(T, U, axes=(mode, 1))
+        # move new axis to correct position
+        T = np.moveaxis(T, -1, mode)
+
+    state_vector = T.reshape(-1)  # 1D flatten
+    state_vector /= np.linalg.norm(state_vector)
+
+    cirq.validate_normalized_state_vector(
+        state_vector, qid_shape=(2 ** sum(num_qubits_per_partition),)
+    )
+
+    return state_vector

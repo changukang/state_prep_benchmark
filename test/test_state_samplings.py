@@ -5,12 +5,10 @@ from typing import List, Tuple
 import cirq
 import numpy as np
 
-from state_preparation.state_samplers import (
-    get_random_basis_state_vectors,
-    get_random_sparse_state,
-    get_random_state,
-    get_random_state_by_rank_vector,
-)
+from state_preparation.state_samplers import (get_random_basis_state_vectors,
+                                              get_random_sparse_state,
+                                              get_random_state,
+                                              get_random_state_by_rank_vector)
 
 
 def test_random_state():
@@ -80,6 +78,10 @@ def test_random_state_by_rank_vector():
             rank_vector = list(r + 1 for r in rank_vector)
             if any(r <= 2 for r in rank_vector):
                 continue
+
+            print(qubit_partiton)
+            print(rank_vector)
+
             sampled_sv = get_random_state_by_rank_vector(
                 list(qubit_partiton), rank_vector, seed=42
             )

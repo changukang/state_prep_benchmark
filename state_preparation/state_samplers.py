@@ -55,6 +55,7 @@ def get_random_basis_state_vectors(
 
     return ret
 
+
 def get_random_state_by_rank_vector(
     num_qubits_per_partition: Sequence[int], ranks: Sequence[int], seed: int = None
 ) -> np.ndarray:

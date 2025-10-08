@@ -55,14 +55,6 @@ def get_random_basis_state_vectors(
 
     return ret
 
-
-def random_core(rank_vector: Sequence[int], seed: int = None):
-    rng = np.random.default_rng(seed)
-    G = rng.normal(size=rank_vector)  # i.i.d. N(0,1)
-    G /= np.linalg.norm(G.ravel())
-    return G
-
-
 def get_random_state_by_rank_vector(
     num_qubits_per_partition: Sequence[int], ranks: Sequence[int], seed: int = None
 ) -> np.ndarray:
@@ -88,7 +80,6 @@ def get_random_state_by_rank_vector(
 
     # core tensor
     G = rng.standard_normal(size=ranks)
-
     # random orthogonal factor matrices
     Us = []
     shapes = [2**n for n in num_qubits_per_partition]

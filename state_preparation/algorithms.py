@@ -27,14 +27,6 @@ class InvalidStatePreparationResult(Exception):
         msg = f"Exception was raised : {e}"
         super().__init__(msg)
 
-
-class NumericalComputationError(Exception):
-
-    def __init__(self, e: Optional[Exception] = None):
-        msg = f"Exception was raised : {e}"
-        super().__init__(msg)
-
-
 class StatePreparationBase(ABC):
 
     def run(self, state_vector: np.ndarray) -> StatePreparationResult:
@@ -44,7 +36,7 @@ class StatePreparationBase(ABC):
             result_qc = self._get_result(state_vector)
             return result_qc
         except QiskitError as e:
-            raise InvalidStatePreparationResult(e)
+            raise e
 
     def _pre_run(self, state_vector: np.ndarray):
         sv_num_qubit = num_qubit(state_vector)

@@ -138,7 +138,7 @@ class SubsetSuperposition(BenchmarkStateVectorWithParameters):
         subset = set(rng.sample(range(2**n), subset_size))
         return {"n": n, "subset": subset}
 
-    def __call__(self, n: int, subset: Set[int]):
+    def __call__(self, n: int, subset: Set[int]) -> np.ndarray:
         assert all(
             0 <= i <= 2**n - 1 for i in subset
         ), f"Subset elements must be within the range of 0 to 2^n - 1 where n={n}, however got {subset}"

@@ -30,7 +30,7 @@ class InvalidStatePreparationResult(Exception):
 
 class StatePreparationBase(ABC):
 
-    def run(self, state_vector: np.ndarray) -> StatePreparationResult:
+    def run(self, state_vector: np.ndarray, **kwargs) -> StatePreparationResult:
         self._pre_run(state_vector)
         result_qc = None
         try:
@@ -188,7 +188,7 @@ class XYZ(StatePreparationBase):
             )
 
             qc = xyz.prepare_state(
-                state_vector, verbose_level=0, map_gates=True, param=param
+                state_vector, verbose_level=2, map_gates=True, param=param
             )
             logger.info(f"CNOT cost {qc.get_cnot_cost()}")
         qiskit_qc = xyz.to_qiskit(qc)

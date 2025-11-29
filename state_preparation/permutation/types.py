@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+import enum
 import math
 from dataclasses import dataclass
 from math import gcd, log2
 from pdb import pm
 from typing import Iterable, List, Optional, Sequence, Tuple
+from xml.dom.minidom import Element
 
 import cirq
+import numpy as np
 from cirq import Circuit
 from networkx import reverse
-import numpy as np
 
 
 def _lcm(a: int, b: int) -> int:
@@ -120,8 +122,8 @@ class Permutation:
 
     def inverse(self) -> "Permutation":
         inv = [0] * self.n
-        for i, img in enumerate(self.p, start=1):
-            inv[img - 1] = i
+        for i, img in enumerate(self.p, start=0):
+            inv[img] = i
         return Permutation(inv)
 
     def _cycles_in_tuple(
@@ -186,10 +188,74 @@ class Permutation:
             return NotImplemented
         return self.p == other.p
 
+    def decompose_into_two_disjoint_transpositions(
+        self,
+    ) -> Tuple[TranspositionsList, TranspositionsList]:
+        set_one, set_two = set(), set()
+        for cyc in self.cycles(remove_fixed=True):
+            rho_prime, rho_double_prime = (
+                cyc.decompose_into_two_disjoint_transpositions()
+            )
+            for t in rho_prime:
+                set_one.add(t)
+            for t in rho_double_prime:
+                set_two.add(t)
 
-# -----------------------------
-# Convenience constructors
-# -----------------------------
+        result_one, result_two = TranspositionsList(list(set_one)), TranspositionsList(
+            list(set_two)
+        )
+        return result_one, result_two
+
+    def size(self) -> int:
+        """Return the size of the permutation, defined as the number of non-fixed points."""
+        return sum(1 for i in range(self.n) if self(i) != i)
+
+    def decompose_into_chunked_disjoint_transpositions(
+        self, chunk_size: int
+    ) -> List[DisjointTranspositions]:
+        """Decompose the permutation into disjoint transpositions grouped by chunk size."""
+        if not (chunk_size > 0 and (chunk_size & (chunk_size - 1)) == 0):
+            raise ValueError("chunk_size must be a power of 2")
+
+        chunked_transpositions = []
+        result_one, result_two = self.decompose_into_two_disjoint_transpositions()
+
+        for transpositions_list in [result_one, result_two]:
+            chunks = [
+                transpositions_list.transpositions[i : i + chunk_size]
+                for i in range(0, len(transpositions_list.transpositions), chunk_size)
+            ]
+            for chunk in chunks:
+                chunked_transpositions.append(DisjointTranspositions(chunk))
+
+        return chunked_transpositions
+
+    def index_extraction_based_decomposition_qc(
+        self, qubits: List[cirq.LineQubit]
+    ) -> Circuit:
+        """Algorithm based in https://arxiv.org/abs/2406.16142"""
+
+        assert 2 ** len(qubits) >= (self.n)
+        qc = cirq.Circuit()
+        chunk_size = max(int(2 ** np.floor(np.log2(np.log2(len(qubits)) / 4))), 1)
+        for chunk in self.decompose_into_chunked_disjoint_transpositions(chunk_size):
+            index_extraction_map = chunk.index_extraction_map_qc(qubits)
+            seq_transposes = SequentialTranspositions.from_num_transposes(
+                chunk.n, chunk.m
+            )
+
+            qc += index_extraction_map
+            qc += seq_transposes.to_quantum_circuit(qubits)
+            qc += index_extraction_map**-1
+
+        for x in range(self.n):
+            sv = cirq.one_hot(index=x, shape=2 ** len(qubits), dtype=np.complex128)
+            qc_res = qc.final_state_vector(initial_state=sv, qubit_order=qubits)
+            nonzero = np.where(qc_res > 1e-8)[0]
+
+            assert len(nonzero) == 1
+            assert nonzero[0] == self(x)
+        return qc
 
 
 def transposition(n: int, a: int, b: int) -> Optional[Transposition]:
@@ -274,7 +340,6 @@ class Cycle(Permutation):
             # ρ'' = (x1, x_{2k})(x2, x_{2k-1})...(x_k, x_{k+2})
             for i in range(1, k + 1):
                 rho_double_prime.append(transposition(n, seq[i], seq[m - i]))
-
         return (
             TranspositionsList(list(filter(None, rho_prime))),
             TranspositionsList(list(filter(None, rho_double_prime))),
@@ -315,7 +380,7 @@ class TranspositionsList:
     """A class representing a list of transpositions."""
 
     def __init__(self, transpositions: List[Transposition]):
-        assert len({t.n for t in transpositions}) == 1
+        assert len({t.n for t in transpositions}) == 1 or not transpositions
         self._transpositions = transpositions
 
     @property
@@ -354,6 +419,18 @@ class TranspositionsList:
         if self.transpositions[0].n != other.transpositions[0].n:
             raise ValueError("Transpositions must act on the same set")
         return TranspositionsList(self.transpositions + other.transpositions)
+
+    @property
+    def elements(self) -> List[int]:
+        """
+        Return the list of elements involved in the transpositions.
+        from : (x0,x1)◦(x2,x3)◦···◦(x2m-2,x2m-1),
+        returns [x0, x1, x2, x3, ..., x2m-2, x2m-1]
+        """
+        elems = []
+        for t in self.transpositions:
+            elems += sorted([t.a, t.b])
+        return elems
 
     @property
     def n(self) -> int:
@@ -405,26 +482,34 @@ class DisjointTranspositions(TranspositionsList):
         assert len(transpose_elts) == 2 * len(
             transpositions
         ), "Transpositions must be disjoint."
+
         super().__init__(transpositions)
 
-    @property
-    def elements(self) -> List[int]:
-        """
-        Return the list of elements involved in the disjoint transpositions.
-        from : (x0,x1)◦(x2,x3)◦···◦(x2m-2,x2m-1),
-        returns [x0, x1, x2, x3, ..., x2m-2, x2m-1]
-        """
-        elems = []
-        for t in self.transpositions:
-            elems += sorted([t.a, t.b])
-        return elems
+        if transpositions:
+            assert np.isclose(
+                np.log2(len(self.elements)),
+                round(np.log2(len(self.elements))),
+            )
 
     @property
     def m(self) -> int:
         return len(self.transpositions)
 
-    def induce_map_to_index(self) -> Permutation:
-        raise NotImplementedError()
+    def induced_index_extraction_map(self) -> Permutation:
+        mapping = list(range(0, self.n))
+        num_qubits = int(np.log2(self.n))
+        qubits = cirq.LineQubit.range(num_qubits)
+
+        qc = self.index_extraction_map_qc(qubits)
+
+        for i in range(self.n):
+            in_ = cirq.one_hot(index=i, shape=2**num_qubits, dtype=np.complex128)
+            qc_res = qc.final_state_vector(initial_state=in_, qubit_order=qubits)
+            nonzero = np.where(qc_res > 1e-8)[0]
+            assert len(nonzero) == 1, f"State is not classical: qc_res={qc_res}"
+            mapping[i] = nonzero[0]
+
+        return Permutation(mapping)
 
     def to_binary_matrix(self, binary_length: int) -> np.ndarray:
         binary_matrix = []
@@ -434,17 +519,12 @@ class DisjointTranspositions(TranspositionsList):
             binary_matrix.append(binary_row)
         return np.array(binary_matrix)
 
-    def to_quantum_circuit_for_index_mapping(
-        self, qubits: List[cirq.LineQubit]
-    ) -> Circuit:
+    def index_extraction_map_qc(self, qubits: List[cirq.LineQubit]) -> Circuit:
         """
         The algorithm in https://arxiv.org/abs/2406.16142
+        for constructing σi,1 in quantum circuit.
         """
         qc = cirq.Circuit()
-        assert np.isclose(
-            np.log2(len(self.elements)),
-            round(np.log2(len(self.elements))),
-        )
 
         permuted_qubits = sorted(list(reversed((qubits)))[: int(log2(2 * self.m))])
         permuted_indices = [qubits.index(q) for q in permuted_qubits]
@@ -507,7 +587,20 @@ class DisjointTranspositions(TranspositionsList):
             binary_matrix = transformed_binary_matrix(
                 binary_matrix=self.to_binary_matrix(len(qubits)), qc=qc, qubits=qubits
             )
+
+        for idx, x in enumerate(self.elements):
+            sv = cirq.one_hot(index=x, shape=2 ** len(qubits), dtype=np.complex128)
+            qc_res = qc.final_state_vector(initial_state=sv, qubit_order=qubits)
+            nonzero = np.where(qc_res > 1e-8)[0]
+            assert len(nonzero) == 1
+            assert (
+                nonzero[0] == idx
+            ), f"should be mapped to idx {idx} but got {nonzero[0]}"
+
         return qc
+
+    def __repr__(self) -> str:
+        return f"DisjointTranspositions({self.transpositions})"
 
 
 class SequentialTranspositions(TranspositionsList):
@@ -529,6 +622,23 @@ class SequentialTranspositions(TranspositionsList):
                 )
         super().__init__(transpositions)
 
+    @classmethod
+    def from_num_transposes(
+        cls, n: int, num_transposes: int
+    ) -> SequentialTranspositions:
+        """
+        Create a SequentialTranspositions object with transpositions
+        (0,1)◦(2,3)◦···◦(2m-2,2m-1) where m = num_transposes
+        """
+        if not (np.log2(num_transposes).is_integer() and num_transposes >= 1):
+            raise ValueError("num_transposes must be a power of 2.")
+
+        transpositions = [
+            Transposition(n, 2 * i, 2 * i + 1) for i in range(0, num_transposes)
+        ]
+
+        return cls(transpositions)
+
     def to_quantum_circuit(self, qubits: List[cirq.LineQubit]) -> Circuit:
         max_elt_in_transpositions = max([max(t.a, t.b) for t in self.transpositions])
         targ_qubit_range = math.ceil(log2(max_elt_in_transpositions))
@@ -542,12 +652,33 @@ class SequentialTranspositions(TranspositionsList):
         assert 2 ** len(qubits) >= max_elt_in_transpositions
 
         qc = Circuit()
-        target = qubits[-1]
-        controls = qubits[: len(qubits) - targ_qubit_range]
+        if max_elt_in_transpositions == 1:
+            target = qubits[-1]
+            controls = qubits[: len(qubits) - 1]
+            qc.append(
+                cirq.X.controlled(
+                    num_controls=len(controls), control_values=[0] * len(controls)
+                ).on(*controls, target)
+            )
+        else:
+            raise NotImplementedError("Possibly a bug in following.")
+            target = qubits[-1]
+            controls = qubits[: len(qubits) - targ_qubit_range]
 
-        qc.append(
-            cirq.X.controlled(
-                num_controls=len(controls), control_values=[0] * len(controls)
-            ).on(*controls, target)
-        )
+            qc.append(
+                cirq.X.controlled(
+                    num_controls=len(controls), control_values=[0] * len(controls)
+                ).on(*controls, target)
+            )
+
+        for x in range(self.n):
+            sv = cirq.one_hot(index=x, shape=2 ** len(qubits), dtype=np.complex128)
+            qc_res = qc.final_state_vector(initial_state=sv, qubit_order=qubits)
+            nonzero = np.where(qc_res > 1e-8)[0]
+            assert len(nonzero) == 1
+            assert nonzero[0] == self(x)
+
         return qc
+
+    def __repr__(self) -> str:
+        return f"SequentialTranspositions({self.transpositions})"

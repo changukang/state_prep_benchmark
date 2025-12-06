@@ -12,16 +12,10 @@ def qiskit2cirq_by_qasm(qiskit_qc: qiskit.QuantumCircuit) -> cirq.Circuit:
     return cirq_qc
 
 
-# TODO : remove following later
-# def qiskit2cirq(qiskit_qc: qiskit.QuantumCircuit) -> cirq.Circuit:
-#     qasm_str = qiskit.qasm2.dumps(qiskit_qc)
-#     cirq_qc = circuit_from_qasm(qasm_str)
-#     return cirq_qc
-
-
 def qiskit2cirq(qiskit_qc: qiskit.QuantumCircuit, do_reverse=False) -> cirq.Circuit:
     cirq_qc = cirq.Circuit()
     for gate in qiskit_qc.data:
+        # TODO : check in matrix rather than the name for the robustness
         if gate[0].name == "u3":
             theta, phi, lam = gate[0].params
             theta, phi, lam = (
@@ -36,8 +30,24 @@ def qiskit2cirq(qiskit_qc: qiskit.QuantumCircuit, do_reverse=False) -> cirq.Circ
             control = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
             target = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[1]))
             cirq_qc.append(cirq.CNOT(control, target))
+        elif gate[0].name == "h":
+            qubit = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
+            cirq_qc.append(cirq.H(qubit))
+        elif gate[0].name == "x":
+            qubit = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
+            cirq_qc.append(cirq.X(qubit))
+        elif gate[0].name == "p":
+            exponent = gate[0].params[0] / np.pi
+            qubit = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
+            cirq_qc.append(cirq.ZPowGate(exponent=exponent)(qubit))
+        elif gate[0].name == "tdg":
+            qubit = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
+            cirq_qc.append((cirq.T**-1)(qubit))
+        elif gate[0].name == "t":
+            qubit = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
+            cirq_qc.append((cirq.T)(qubit))
         else:
-            raise ValueError("Unexpected gate type: {}".format(gate))
+            raise ValueError(f"Unexpected gate type: {gate[0]}")
     # TODO : remove following do_reverse routine for generality
     # either call of qclib or qiskit should handle the endian consistency
     if do_reverse:

@@ -9,7 +9,7 @@ dependencies = [
   "cirq",
   "prettytable",
   "fire",
-  "qiskit==2.1.0",
+  "qiskit==2.2.3",
   "qiskit_aer",
   "ply",
   "qiskit_aer",

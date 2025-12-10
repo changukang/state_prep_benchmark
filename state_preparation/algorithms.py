@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Callable, Optional, Type
 
 import cirq
 import numpy as np
@@ -12,9 +12,11 @@ from qiskit.exceptions import QiskitError
 from qiskit.quantum_info.states.statevector import Statevector
 
 from qclib.state_preparation import LowRankInitialize, UCGEInitialize
+from state_preparation.mcx.mcx_gates import MCXGateBase, QulinMCXGate
+from state_preparation.permutation.types import Permutation, Transposition
 
 from .results import StatePreparationResult
-from .utils import catchtime, num_qubit
+from .utils import catchtime, get_global_phase_match, num_qubit
 
 logger = logging.getLogger(__name__)
 QISKIT = "qiskit"
@@ -206,6 +208,95 @@ class XYZ(StatePreparationBase):
     @property
     def name(self):
         return "XYZ"
+
+    def __eq__(self, value):
+        return type(self) is type(value)
+
+
+class SandwichedPermutation(StatePreparationBase):
+    """
+    Implements algorithm from paper
+        "Nearly Optimal Circuit Size for Sparse Quantum State Preparation"
+        https://arxiv.org/pdf/2406.16142
+    """
+
+    def __init__(
+        self,
+        sub_state_preparation: Callable[[np.ndarray], StatePreparationResult],
+        mcx_gate_type: Type[MCXGateBase],
+    ):
+        self.sub_state_preparation = sub_state_preparation
+        self.mcx_gate_type = mcx_gate_type
+
+    def _get_result(
+        self,
+        state_vector: np.ndarray,
+    ) -> StatePreparationResult:
+        sv_num_qubit = num_qubit(state_vector)
+
+        def get_target_perm(sv: np.ndarray) -> Permutation:
+            nonzero_indicies = (np.where(sv > 1e-8)[0]).tolist()
+            sparsity = len(nonzero_indicies)
+            flag = np.zeros(sparsity, dtype=int)
+            sv_num_qubit = num_qubit(sv)
+            perm_building = Permutation.identity(2**sv_num_qubit)
+            for i in nonzero_indicies:
+                if i < sparsity:
+                    flag[i] = 1
+
+            for q in nonzero_indicies:
+                if q >= sparsity:
+                    k = np.where(flag == 0)[0][0]
+                    flag[k] = 1
+                    perm_building = perm_building.compose(
+                        Transposition(2**sv_num_qubit, k, q)
+                    )
+            return perm_building
+
+        perm = get_target_perm(state_vector)
+
+        nonzero_indicies = (np.where(state_vector > 1e-8)[0]).tolist()
+        sparsity = len(nonzero_indicies)
+        dense_sv_to_prep = np.zeros(
+            2 ** int(np.ceil(np.log2(sparsity))), dtype=np.complex128
+        )
+
+        inversed = perm.inverse()
+        for i in nonzero_indicies:
+            dense_sv_to_prep[inversed(i)] = state_vector[i]
+
+        qc = cirq.Circuit()
+        sub_prep_result = self.sub_state_preparation(dense_sv_to_prep)
+
+        to_move = sv_num_qubit - num_qubit(dense_sv_to_prep)
+        qc += sub_prep_result.cirq_circuit.transform_qubits(
+            {
+                cirq.LineQubit(i): cirq.LineQubit(i + to_move)
+                for i in range(num_qubit(dense_sv_to_prep))
+            }
+        )
+        qc += cirq.global_phase_operation(get_global_phase_match(dense_sv_to_prep, qc))
+
+        perm_qc = perm.index_extraction_based_decomposition_qc(
+            cirq.LineQubit.range(sv_num_qubit), mcx_gate_type=self.mcx_gate_type
+        )
+
+        assert all(
+            op.gate == cirq.CX for op in perm_qc.all_operations() if len(op.qubits) > 1
+        )
+        qc += perm_qc
+
+        return StatePreparationResult(
+            state_prep_engine=self,
+            target_sv=state_vector,
+            circuit=qc,
+            elapsed_time=None,
+            skip_qc_validation=True,
+        )
+
+    @property
+    def name(self):
+        return "SequentialSuperpositionSynthesis"
 
     def __eq__(self, value):
         return type(self) is type(value)

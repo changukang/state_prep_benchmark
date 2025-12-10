@@ -5,13 +5,18 @@ import math
 from dataclasses import dataclass
 from math import gcd, log2
 from pdb import pm
-from typing import Iterable, List, Optional, Sequence, Tuple
+from re import M
+from typing import Callable, Iterable, List, Optional, Sequence, Tuple, Type
+from urllib.parse import quote_from_bytes
 from xml.dom.minidom import Element
 
 import cirq
 import numpy as np
 from cirq import Circuit
 from networkx import reverse
+from qclib.gates import mcx
+
+from state_preparation.mcx.mcx_gates import CanonMCXGate, MCXGateBase, QulinMCXGate
 
 
 def _lcm(a: int, b: int) -> int:
@@ -172,9 +177,6 @@ class Permutation:
             l = _lcm(l, len(cyc))
         return max(l, 1)  # identity → 1
 
-    # -------------
-    # Pretty print
-    # -------------
     def __str__(self) -> str:
         cyc = self.cycles(remove_fixed=True)
         if not cyc:
@@ -231,7 +233,7 @@ class Permutation:
         return chunked_transpositions
 
     def index_extraction_based_decomposition_qc(
-        self, qubits: List[cirq.LineQubit]
+        self, qubits: List[cirq.LineQubit], mcx_gate_type: Type[MCXGateBase]
     ) -> Circuit:
         """Algorithm based in https://arxiv.org/abs/2406.16142"""
 
@@ -239,15 +241,19 @@ class Permutation:
         qc = cirq.Circuit()
         chunk_size = max(int(2 ** np.floor(np.log2(np.log2(len(qubits)) / 4))), 1)
         for chunk in self.decompose_into_chunked_disjoint_transpositions(chunk_size):
-            index_extraction_map = chunk.index_extraction_map_qc(qubits)
             seq_transposes = SequentialTranspositions.from_num_transposes(
                 chunk.n, chunk.m
             )
 
+            index_extraction_map = chunk.index_extraction_map_qc(
+                qubits, mcx_gate_type=mcx_gate_type
+            )
+
             qc += index_extraction_map
-            qc += seq_transposes.to_quantum_circuit(qubits)
+            qc += seq_transposes.to_quantum_circuit(qubits, mcx_gate_type=mcx_gate_type)
             qc += index_extraction_map**-1
 
+        # Validation
         for x in range(self.n):
             sv = cirq.one_hot(index=x, shape=2 ** len(qubits), dtype=np.complex128)
             qc_res = qc.final_state_vector(initial_state=sv, qubit_order=qubits)
@@ -255,6 +261,7 @@ class Permutation:
 
             assert len(nonzero) == 1
             assert nonzero[0] == self(x)
+
         return qc
 
 
@@ -500,7 +507,7 @@ class DisjointTranspositions(TranspositionsList):
         num_qubits = int(np.log2(self.n))
         qubits = cirq.LineQubit.range(num_qubits)
 
-        qc = self.index_extraction_map_qc(qubits)
+        qc = self.index_extraction_map_qc(qubits, mcx_gate_type=CanonMCXGate)
 
         for i in range(self.n):
             in_ = cirq.one_hot(index=i, shape=2**num_qubits, dtype=np.complex128)
@@ -519,7 +526,9 @@ class DisjointTranspositions(TranspositionsList):
             binary_matrix.append(binary_row)
         return np.array(binary_matrix)
 
-    def index_extraction_map_qc(self, qubits: List[cirq.LineQubit]) -> Circuit:
+    def index_extraction_map_qc(
+        self, qubits: List[cirq.LineQubit], mcx_gate_type: Type[MCXGateBase]
+    ) -> Circuit:
         """
         The algorithm in https://arxiv.org/abs/2406.16142
         for constructing σi,1 in quantum circuit.
@@ -561,33 +570,72 @@ class DisjointTranspositions(TranspositionsList):
                         )
                 non_zero_indices = [i for i, bit in enumerate(target_row) if bit == 1]
                 for i in non_zero_non_permut_indicies:
-                    qc.append(
-                        cirq.X(qubits[i]).controlled_by(
-                            *[qubits[j] for j in non_zero_indices]
+                    mcx_main_qubits = [qubits[j] for j in non_zero_indices] + [
+                        qubits[i]
+                    ]
+                    free_qubits = [q for q in qubits if q not in mcx_main_qubits][
+                        : mcx_gate_type.required_aux_qubits_num(
+                            len(mcx_main_qubits) - 1
                         )
+                    ]
+
+                    qc.append(
+                        cirq.decompose_once(
+                            mcx_gate_type(
+                                num_controls=len(non_zero_indices),
+                                num_aux_qubits=len(free_qubits),
+                            )(*(mcx_main_qubits + free_qubits))
+                        )
+                        # cirq.X(qubits[i]).controlled_by(
+                        #     *[qubits[j] for j in non_zero_indices]
+                        # )
                     )
             else:
+                mcx_main_qubits = non_zero_permute_qubits + [non_permuted_qubits[0]]
+                free_qubits = [q for q in qubits if q not in mcx_main_qubits][
+                    : mcx_gate_type.required_aux_qubits_num(len(mcx_main_qubits) - 1)
+                ]
+
                 non_zero_permute_qubits = [
                     qubits[i] for i in permuted_indices if row[i] == 1
                 ]
                 qc.append(
-                    cirq.X(non_permuted_qubits[0]).controlled_by(
-                        *non_zero_permute_qubits
+                    cirq.decompose_once(
+                        mcx_gate_type(num_controls=len(non_zero_permute_qubits))(
+                            *(mcx_main_qubits + free_qubits)
+                        )
                     )
+                    # cirq.X(non_permuted_qubits[0]).controlled_by(
+                    #     *non_zero_permute_qubits
+                    # )
                 )
                 for i in permuted_indices:
                     if target_row[i] != row[i]:
                         qc.append(cirq.CX(non_permuted_qubits[0], qubits[i]))
                 non_zero_indices = [i for i, bit in enumerate(target_row) if bit == 1]
+
+                mcx_main_qubits = [qubits[j] for j in non_zero_indices] + [
+                    non_permuted_qubits[0]
+                ]
+                free_qubits = [q for q in qubits if q not in mcx_main_qubits][
+                    : mcx_gate_type.required_aux_qubits_num(len(mcx_main_qubits) - 1)
+                ]
+
                 qc.append(
-                    cirq.X(non_permuted_qubits[0]).controlled_by(
-                        *[qubits[j] for j in non_zero_indices]
+                    cirq.decompose_once(
+                        mcx_gate_type(num_controls=len(non_zero_indices))(
+                            *(mcx_main_qubits + free_qubits)
+                        )
                     )
+                    # cirq.X(non_permuted_qubits[0]).controlled_by(
+                    #     *[qubits[j] for j in non_zero_indices]
+                    # )
                 )
             binary_matrix = transformed_binary_matrix(
                 binary_matrix=self.to_binary_matrix(len(qubits)), qc=qc, qubits=qubits
             )
 
+        # Validation
         for idx, x in enumerate(self.elements):
             sv = cirq.one_hot(index=x, shape=2 ** len(qubits), dtype=np.complex128)
             qc_res = qc.final_state_vector(initial_state=sv, qubit_order=qubits)
@@ -639,7 +687,9 @@ class SequentialTranspositions(TranspositionsList):
 
         return cls(transpositions)
 
-    def to_quantum_circuit(self, qubits: List[cirq.LineQubit]) -> Circuit:
+    def to_quantum_circuit(
+        self, qubits: List[cirq.LineQubit], mcx_gate_type: Type[MCXGateBase]
+    ) -> Circuit:
         max_elt_in_transpositions = max([max(t.a, t.b) for t in self.transpositions])
         targ_qubit_range = math.ceil(log2(max_elt_in_transpositions))
 
@@ -655,10 +705,19 @@ class SequentialTranspositions(TranspositionsList):
         if max_elt_in_transpositions == 1:
             target = qubits[-1]
             controls = qubits[: len(qubits) - 1]
+            main_mcx_qubits = controls + [target]
+            free_qubits = [q for q in qubits if q not in main_mcx_qubits][
+                : mcx_gate_type.required_aux_qubits_num(len(main_mcx_qubits) - 1)
+            ]
             qc.append(
-                cirq.X.controlled(
-                    num_controls=len(controls), control_values=[0] * len(controls)
-                ).on(*controls, target)
+                cirq.decompose_once(
+                    mcx_gate_type(
+                        num_controls=len(controls), control_values=[0] * len(controls)
+                    )(*(main_mcx_qubits + free_qubits))
+                )
+                # cirq.X.controlled(
+                # num_controls=len(controls), control_values=[0] * len(controls)
+                # ).on(*controls, target)
             )
         else:
             raise NotImplementedError("Possibly a bug in following.")
@@ -671,6 +730,7 @@ class SequentialTranspositions(TranspositionsList):
                 ).on(*controls, target)
             )
 
+        # Validation
         for x in range(self.n):
             sv = cirq.one_hot(index=x, shape=2 ** len(qubits), dtype=np.complex128)
             qc_res = qc.final_state_vector(initial_state=sv, qubit_order=qubits)

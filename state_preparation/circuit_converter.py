@@ -16,34 +16,33 @@ def qiskit2cirq(qiskit_qc: qiskit.QuantumCircuit, do_reverse=False) -> cirq.Circ
     cirq_qc = cirq.Circuit()
     for gate in qiskit_qc.data:
         # TODO : check in matrix rather than the name for the robustness
-        if gate[0].name == "u3":
-            theta, phi, lam = gate[0].params
+        if gate.operation.name == "u3":
+            theta, phi, lam = gate.operation.params
             theta, phi, lam = (
                 float(theta) / np.pi,
                 float(phi) / np.pi,
                 float(lam) / np.pi,
             )
             qubit = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
-
             cirq_qc.append(QasmUGate(theta, phi, lam)(qubit))
-        elif gate[0].name == "cx":
+        elif gate.operation.name == "cx":
             control = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
             target = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[1]))
             cirq_qc.append(cirq.CNOT(control, target))
-        elif gate[0].name == "h":
+        elif gate.operation.name == "h":
             qubit = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
             cirq_qc.append(cirq.H(qubit))
-        elif gate[0].name == "x":
+        elif gate.operation.name == "x":
             qubit = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
             cirq_qc.append(cirq.X(qubit))
-        elif gate[0].name == "p":
-            exponent = gate[0].params[0] / np.pi
+        elif gate.operation.name == "p":
+            exponent = gate.operation.params[0] / np.pi
             qubit = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
             cirq_qc.append(cirq.ZPowGate(exponent=exponent)(qubit))
-        elif gate[0].name == "tdg":
+        elif gate.operation.name == "tdg":
             qubit = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
             cirq_qc.append((cirq.T**-1)(qubit))
-        elif gate[0].name == "t":
+        elif gate.operation.name == "t":
             qubit = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
             cirq_qc.append((cirq.T)(qubit))
         else:

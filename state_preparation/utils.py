@@ -27,7 +27,7 @@ def num_qubit(state_vector: np.ndarray) -> int:
     return in_int
 
 
-def num_cnot_for_cirq_circuit(qc: cirq.Circuit) -> int:
+def num_cnot_for_cirq_circuit(qc: cirq.Circuit, skip_unknown_gate: bool = False) -> int:
     cnt = 0
     for gate_op in qc.all_operations():
         if gate_op._num_qubits_() == 2:
@@ -39,9 +39,10 @@ def num_cnot_for_cirq_circuit(qc: cirq.Circuit) -> int:
         elif isinstance(gate_op.gate, cirq.GlobalPhaseGate):
             continue
         else:
-            raise ValueError(
-                f"Invalid >3-qubit gate encountered {gate_op.gate} of gate type {type(gate_op.gate)}"
-            )
+            if not skip_unknown_gate:
+                raise ValueError(
+                    f"Invalid >3-qubit gate encountered {gate_op.gate} of gate type {type(gate_op.gate)}"
+                )
     return cnt
 
 
@@ -83,3 +84,14 @@ def is_orthogonal(basis: List[np.ndarray]) -> bool:
 
 def sparsity(sv: np.ndarray, atol=1e-07) -> int:
     return np.count_nonzero(np.abs(sv) > atol)
+
+
+def get_global_phase_match(sv: np.ndarray, qc: cirq.Circuit) -> complex:
+    assert sv.ndim == 1
+
+    unitary = cirq.unitary(qc)
+    corr_sv = unitary[:, 0]
+
+    nz_idx = np.flatnonzero(np.abs(sv) > 1e-12)[0]
+
+    return sv[nz_idx] / corr_sv[nz_idx]

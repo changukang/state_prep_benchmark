@@ -10,7 +10,7 @@ dependencies = [
   "prettytable",
   "fire",
   "qiskit==2.2.3",
-  "qiskit_aer",
+  "qiskit_aer==0.17.2",
   "ply",
   "qiskit_aer",
   "black",

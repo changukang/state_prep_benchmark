@@ -12,7 +12,7 @@ from qiskit.exceptions import QiskitError
 from qiskit.quantum_info.states.statevector import Statevector
 
 from qclib.state_preparation import LowRankInitialize, UCGEInitialize
-from state_preparation.mcx.mcx_gates import MCXGateBase, QulinMCXGate
+from state_preparation.mcx.mcx_gates import MCXGateBase
 from state_preparation.permutation.types import Permutation, Transposition
 
 from .results import StatePreparationResult

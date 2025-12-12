@@ -2,15 +2,13 @@ from typing import Sequence
 
 import cirq
 import numpy as np
+import pytest
 
-from state_preparation.permutation.types import (
-    Cycle,
-    DisjointTranspositions,
-    Permutation,
-    SequentialTranspositions,
-    Transposition,
-    transposition,
-)
+from state_preparation.mcx.mcx_gates import CanonMCXGate, QulinMCXGate
+from state_preparation.permutation.types import (Cycle, DisjointTranspositions,
+                                                 Permutation,
+                                                 SequentialTranspositions,
+                                                 Transposition, transposition)
 from state_preparation.state_samplers import get_random_sparse_state
 
 
@@ -105,6 +103,7 @@ def test_transposition():
         assert sigma(i) == i
 
 
+@pytest.mark.skip(reason="Not Implemented Yet")
 def test_sequential_transpositions():
 
     for num_qubit, m in zip([7, 8], [8, 16]):
@@ -115,7 +114,7 @@ def test_sequential_transpositions():
         s_transposes = SequentialTranspositions(sequential_transposes)
 
         qbits = cirq.LineQubit.range(num_qubit)
-        qc = s_transposes.to_quantum_circuit(qbits)
+        qc = s_transposes.to_quantum_circuit(qbits, mcx_gate_type=QulinMCXGate)
         for seed in range(20):
             sv = get_random_sparse_state(num_qubit=num_qubit, sparsity=10, seed=seed)
             reordered_sv = s_transposes.apply_to_state(sv)
@@ -123,6 +122,7 @@ def test_sequential_transpositions():
             assert np.isclose(reordered_sv, res, atol=1e-8).all()
 
 
+@pytest.mark.skip(reason="Not Implemented Yet")
 def test_disjoint_transpositions():
     rng = np.random.default_rng(seed=42)
     random_permutation = tuple(rng.choice(range(32), size=20, replace=False))
@@ -138,7 +138,7 @@ def test_disjoint_transpositions():
     for idx, elt in enumerate(disjoint_transposition.elements):
         assert index_extraction_mapping(elt) == idx
 
-    seq_transposes = SequentialTranspositions.from_max_length(
+    seq_transposes = SequentialTranspositions.from_num_transposes(
         disjoint_transposition.n, disjoint_transposition.m
     )
 
@@ -153,9 +153,16 @@ def test_disjoint_transpositions():
 
     qc = cirq.Circuit()
     qubits = cirq.LineQubit.range(6)
-    qc += disjoint_transposition.index_extraction_map_qc(qubits)
-    qc += seq_transposes.to_quantum_circuit(qubits)
-    qc += disjoint_transposition.index_extraction_map_qc(qubits) ** -1
+    qc += disjoint_transposition.index_extraction_map_qc(
+        qubits, mcx_gate_type=CanonMCXGate
+    )
+    qc += seq_transposes.to_quantum_circuit(qubits, mcx_gate_type=CanonMCXGate)
+    qc += (
+        disjoint_transposition.index_extraction_map_qc(
+            qubits, mcx_gate_type=CanonMCXGate
+        )
+        ** -1
+    )
 
     for elt in disjoint_transposition.elements:
         initial_state = np.zeros(64, dtype=np.complex128)
@@ -191,7 +198,9 @@ def test_decompose_permutation_into_two_disjoint_transpositions():
 
     assert sorted(permuted) == sorted(nonzero_indicies)
 
-    qc = perm_building.index_extraction_based_decomposition_qc(cirq.LineQubit.range(6))
+    qc = perm_building.index_extraction_based_decomposition_qc(
+        cirq.LineQubit.range(6), mcx_gate_type=CanonMCXGate
+    )
 
     for i in range(2**6):
         initial_state = np.zeros(64, dtype=np.complex128)

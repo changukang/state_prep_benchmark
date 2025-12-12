@@ -1,10 +1,7 @@
-from multiprocessing import Value
-from turtle import shearfactor
 from typing import List, Optional, Sequence
 
 import cirq
 import numpy as np
-from sympy import rad
 
 from state_preparation.utils import is_orthogonal
 

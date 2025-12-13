@@ -224,7 +224,7 @@ class SandwichedPermutation(StatePreparationBase):
         self,
         sub_state_preparation: Callable[[np.ndarray], StatePreparationResult],
         mcx_gate_type: Type[MCXGateBase],
-        do_validation: bool = True,
+        do_validation: bool = False,
     ):
         self.sub_state_preparation = sub_state_preparation
         self.mcx_gate_type = mcx_gate_type

@@ -1,15 +1,19 @@
 from typing import Sequence, Union
 
 import cirq
-from cirq.transformers.analytical_decompositions import \
-    decompose_multi_controlled_x
-from qiskit.synthesis import (synth_mcx_1_dirty_kg24, synth_mcx_2_dirty_kg24,
-                              synth_mcx_n_dirty_i15, synth_mcx_noaux_hp24,
-                              synth_mcx_noaux_v24)
+from cirq.transformers.analytical_decompositions import decompose_multi_controlled_x
+from qiskit.synthesis import (
+    synth_mcx_1_dirty_kg24,
+    synth_mcx_2_dirty_kg24,
+    synth_mcx_n_dirty_i15,
+    synth_mcx_noaux_hp24,
+    synth_mcx_noaux_v24,
+)
 
 from state_preparation.circuit_converter import qiskit2cirq
-from state_preparation.utils import \
-    keep_ftn_for_cirq_decompose  # Using technique from Braceno et al.
+from state_preparation.utils import (  # Using technique from Braceno et al.
+    keep_ftn_for_cirq_decompose,
+)
 
 
 class NotEnoughAuxQubits(Exception):

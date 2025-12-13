@@ -16,7 +16,12 @@ from state_preparation.mcx.mcx_gates import MCXGateBase
 from state_preparation.permutation.types import Permutation, Transposition
 
 from .results import StatePreparationResult
-from .utils import catchtime, get_global_phase_match, num_qubit
+from .utils import (
+    catchtime,
+    get_global_phase_match,
+    num_cnot_for_cirq_circuit,
+    num_qubit,
+)
 
 logger = logging.getLogger(__name__)
 QISKIT = "qiskit"
@@ -270,6 +275,10 @@ class SandwichedPermutation(StatePreparationBase):
         qc = cirq.Circuit()
         sub_prep_result = self.sub_state_preparation(dense_sv_to_prep)
 
+        logger.info(
+            f"Sub State Preparation #CNOT count : {num_cnot_for_cirq_circuit(sub_prep_result.cirq_circuit)}"
+        )
+
         to_move = sv_num_qubit - num_qubit(dense_sv_to_prep)
         qc += sub_prep_result.cirq_circuit.transform_qubits(
             {
@@ -283,6 +292,10 @@ class SandwichedPermutation(StatePreparationBase):
             cirq.LineQubit.range(sv_num_qubit),
             mcx_gate_type=self.mcx_gate_type,
             do_validation=self.do_validation,
+        )
+
+        logger.info(
+            f"Premutation Part #CNOT count : {num_cnot_for_cirq_circuit(perm_qc)}"
         )
 
         assert all(

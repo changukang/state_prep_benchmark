@@ -5,8 +5,9 @@ import qiskit
 import qiskit.qasm2
 from cirq.circuits.qasm_output import QasmUGate
 from cirq.contrib.qasm_import import circuit_from_qasm
-from cirq.transformers.analytical_decompositions import \
-    decompose_multi_controlled_rotation
+from cirq.transformers.analytical_decompositions import (
+    decompose_multi_controlled_rotation,
+)
 
 
 def qiskit2cirq_by_qasm(qiskit_qc: qiskit.QuantumCircuit) -> cirq.Circuit:

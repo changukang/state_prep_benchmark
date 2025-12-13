@@ -1,10 +1,12 @@
 import cirq
 import numpy as np
 
-from state_preparation.benchmark.states import (BalancedHammingWeight,
-                                                GraphPermutationSuperposition,
-                                                HeadZeroSuperposition,
-                                                SubsetSuperposition)
+from state_preparation.benchmark.states import (
+    BalancedHammingWeight,
+    GraphPermutationSuperposition,
+    HeadZeroSuperposition,
+    SubsetSuperposition,
+)
 
 ZERO_KET = np.array([1, 0])
 ONE_KET = np.array([0, 1])

@@ -31,6 +31,7 @@ force-exclude = '''
 
 [tool.isort]
 skip = ["qclib", "quantum-xyz"]
+profile = "black"
 
 [tool.mypy]
 exclude = "^(qclib/)"
@@ -46,6 +47,9 @@ my-package = {path = "./qclib", develop = true}
 include = ["state_preparation*"]
 
 [tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
 testpaths = ["test"]  
 norecursedirs = ["qclib", "quantum-xyz"]
 pythonpath = [
@@ -57,3 +61,4 @@ exclude = ["qclib", "quantum-xyz"]
 
 [tool.ty.src]
 exclude = ["qclib", "quantum-xyz"]
+

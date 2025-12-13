@@ -5,10 +5,14 @@ import numpy as np
 import pytest
 
 from state_preparation.mcx.mcx_gates import CanonMCXGate, QulinMCXGate
-from state_preparation.permutation.types import (Cycle, DisjointTranspositions,
-                                                 Permutation,
-                                                 SequentialTranspositions,
-                                                 Transposition, transposition)
+from state_preparation.permutation.types import (
+    Cycle,
+    DisjointTranspositions,
+    Permutation,
+    SequentialTranspositions,
+    Transposition,
+    transposition,
+)
 from state_preparation.state_samplers import get_random_sparse_state
 
 

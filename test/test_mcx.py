@@ -6,18 +6,25 @@ import numpy as np
 import pytest
 
 from state_preparation.circuit_converter import qiskit2cirq
-from state_preparation.mcx.increments import (decrement_with_borrowed_qubits,
-                                              increment_with_borrowed_qubits)
-from state_preparation.mcx.mcx_gates import (CirqStandardMCXGate,
-                                             ItenDirtyMCXGate,
-                                             KGDirtyOneMCXGate,
-                                             KGDirtyTwoMCXGate, MCXGateBase,
-                                             QulinMCXGate,
-                                             SelectiveOptimalMCXGate,
-                                             ValeMCXGate)
+from state_preparation.mcx.increments import (
+    decrement_with_borrowed_qubits,
+    increment_with_borrowed_qubits,
+)
+from state_preparation.mcx.mcx_gates import (
+    CirqStandardMCXGate,
+    ItenDirtyMCXGate,
+    KGDirtyOneMCXGate,
+    KGDirtyTwoMCXGate,
+    MCXGateBase,
+    QulinMCXGate,
+    SelectiveOptimalMCXGate,
+    ValeMCXGate,
+)
 from state_preparation.state_samplers import get_random_state
-from state_preparation.utils import (keep_ftn_for_cirq_decompose,
-                                     num_cnot_for_cirq_circuit)
+from state_preparation.utils import (
+    keep_ftn_for_cirq_decompose,
+    num_cnot_for_cirq_circuit,
+)
 
 
 def twos_complement_to_int(bitstring: str) -> int:

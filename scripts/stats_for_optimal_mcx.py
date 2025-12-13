@@ -2,11 +2,15 @@ from typing import Dict, Tuple, Type
 
 import cirq.circuits
 
-from state_preparation.mcx.mcx_gates import (CirqStandardMCXGate,
-                                             ItenDirtyMCXGate,
-                                             KGDirtyOneMCXGate,
-                                             KGDirtyTwoMCXGate, MCXGateBase,
-                                             QulinMCXGate, ValeMCXGate)
+from state_preparation.mcx.mcx_gates import (
+    CirqStandardMCXGate,
+    ItenDirtyMCXGate,
+    KGDirtyOneMCXGate,
+    KGDirtyTwoMCXGate,
+    MCXGateBase,
+    QulinMCXGate,
+    ValeMCXGate,
+)
 from state_preparation.utils import num_cnot_for_cirq_circuit
 
 

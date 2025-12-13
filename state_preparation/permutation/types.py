@@ -582,9 +582,6 @@ class DisjointTranspositions(TranspositionsList):
                                 mcx_main_qubits, available_free_qubits
                             )
                         )
-                        # cirq.X(qubits[i]).controlled_by(
-                        #     *[qubits[j] for j in non_zero_indices]
-                        # )
                     )
             else:
                 non_zero_permute_qubits = [
@@ -599,9 +596,6 @@ class DisjointTranspositions(TranspositionsList):
                         )
                     )
                 )
-                # cirq.X(non_permuted_qubits[0]).controlled_by(
-                #     *non_zero_permute_qubits
-                # )
 
                 for i in permuted_indices:
                     if target_row[i] != row[i]:
@@ -619,9 +613,6 @@ class DisjointTranspositions(TranspositionsList):
                             mcx_main_qubits, free_qubits
                         )
                     )
-                    # cirq.X(non_permuted_qubits[0]).controlled_by(
-                    #     *[qubits[j] for j in non_zero_indices]
-                    # )
                 )
             binary_matrix = transformed_binary_matrix(
                 binary_matrix=self.to_binary_matrix(len(qubits)), qc=qc, qubits=qubits
@@ -711,14 +702,6 @@ class SequentialTranspositions(TranspositionsList):
                         main_mcx_qubits, free_qubits, control_values=[0] * len(controls)
                     )
                 )
-                # cirq.decompose_once(
-                #     mcx_gate_type(
-                #         num_controls=len(controls), control_values=[0] * len(controls)
-                #     )(*(main_mcx_qubits + free_qubits))
-                # )
-                # cirq.X.controlled(
-                # num_controls=len(controls), control_values=[0] * len(controls)
-                # ).on(*controls, target)
             )
         else:
             raise NotImplementedError("Possibly a bug in following.")

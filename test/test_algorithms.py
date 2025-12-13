@@ -1,12 +1,16 @@
 import cirq
 import numpy as np
 
-from state_preparation.algorithms import (XYZ, IsometryBased, LowRankStatePrep,
-                                          SandwichedPermutation, UCGEBased)
+from state_preparation.algorithms import (
+    XYZ,
+    IsometryBased,
+    LowRankStatePrep,
+    SandwichedPermutation,
+    UCGEBased,
+)
 from state_preparation.mcx.mcx_gates import SelectiveOptimalMCXGate
 from state_preparation.results import StatePreparationResult
-from state_preparation.state_samplers import (get_random_sparse_state,
-                                              get_random_state)
+from state_preparation.state_samplers import get_random_sparse_state, get_random_state
 
 
 def test_low_rank():

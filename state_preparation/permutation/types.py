@@ -226,7 +226,10 @@ class Permutation:
         return chunked_transpositions
 
     def index_extraction_based_decomposition_qc(
-        self, qubits: List[cirq.LineQubit], mcx_gate_type: Type[MCXGateBase]
+        self,
+        qubits: List[cirq.LineQubit],
+        mcx_gate_type: Type[MCXGateBase],
+        do_validation: bool = False,
     ) -> Circuit:
         """Algorithm based in https://arxiv.org/abs/2406.16142"""
 
@@ -246,13 +249,14 @@ class Permutation:
             qc += index_extraction_map**-1
 
         # Validation
-        for x in range(self.n):
-            sv = cirq.one_hot(index=x, shape=2 ** len(qubits), dtype=np.complex128)
-            qc_res = qc.final_state_vector(initial_state=sv, qubit_order=qubits)
-            nonzero = np.where(qc_res > 1e-8)[0]
+        if do_validation:
+            for x in range(self.n):
+                sv = cirq.one_hot(index=x, shape=2 ** len(qubits), dtype=np.complex128)
+                qc_res = qc.final_state_vector(initial_state=sv, qubit_order=qubits)
+                nonzero = np.where(qc_res > 1e-8)[0]
 
-            assert len(nonzero) == 1
-            assert nonzero[0] == self(x)
+                assert len(nonzero) == 1
+                assert nonzero[0] == self(x)
 
         return qc
 
@@ -519,7 +523,10 @@ class DisjointTranspositions(TranspositionsList):
         return np.array(binary_matrix)
 
     def index_extraction_map_qc(
-        self, qubits: List[cirq.LineQubit], mcx_gate_type: Type[MCXGateBase]
+        self,
+        qubits: List[cirq.LineQubit],
+        mcx_gate_type: Type[MCXGateBase],
+        do_validation: bool = False,
     ) -> Circuit:
         """
         The algorithm in https://arxiv.org/abs/2406.16142
@@ -620,15 +627,16 @@ class DisjointTranspositions(TranspositionsList):
                 binary_matrix=self.to_binary_matrix(len(qubits)), qc=qc, qubits=qubits
             )
 
-        # Validation
-        for idx, x in enumerate(self.elements):
-            sv = cirq.one_hot(index=x, shape=2 ** len(qubits), dtype=np.complex128)
-            qc_res = qc.final_state_vector(initial_state=sv, qubit_order=qubits)
-            nonzero = np.where(qc_res > 1e-8)[0]
-            assert len(nonzero) == 1
-            assert (
-                nonzero[0] == idx
-            ), f"should be mapped to idx {idx} but got {nonzero[0]}"
+        if do_validation:
+            # Validation
+            for idx, x in enumerate(self.elements):
+                sv = cirq.one_hot(index=x, shape=2 ** len(qubits), dtype=np.complex128)
+                qc_res = qc.final_state_vector(initial_state=sv, qubit_order=qubits)
+                nonzero = np.where(qc_res > 1e-8)[0]
+                assert len(nonzero) == 1
+                assert (
+                    nonzero[0] == idx
+                ), f"should be mapped to idx {idx} but got {nonzero[0]}"
 
         return qc
 
@@ -673,7 +681,10 @@ class SequentialTranspositions(TranspositionsList):
         return cls(transpositions)
 
     def to_quantum_circuit(
-        self, qubits: List[cirq.LineQubit], mcx_gate_type: Type[MCXGateBase]
+        self,
+        qubits: List[cirq.LineQubit],
+        mcx_gate_type: Type[MCXGateBase],
+        do_validation: bool = False,
     ) -> Circuit:
         max_elt_in_transpositions = max([max(t.a, t.b) for t in self.transpositions])
         targ_qubit_range = math.ceil(log2(max_elt_in_transpositions))
@@ -721,12 +732,13 @@ class SequentialTranspositions(TranspositionsList):
             )
 
         # Validation
-        for x in range(self.n):
-            sv = cirq.one_hot(index=x, shape=2 ** len(qubits), dtype=np.complex128)
-            qc_res = qc.final_state_vector(initial_state=sv, qubit_order=qubits)
-            nonzero = np.where(qc_res > 1e-8)[0]
-            assert len(nonzero) == 1
-            assert nonzero[0] == self(x)
+        if do_validation:
+            for x in range(self.n):
+                sv = cirq.one_hot(index=x, shape=2 ** len(qubits), dtype=np.complex128)
+                qc_res = qc.final_state_vector(initial_state=sv, qubit_order=qubits)
+                nonzero = np.where(qc_res > 1e-8)[0]
+                assert len(nonzero) == 1
+                assert nonzero[0] == self(x)
 
         return qc
 

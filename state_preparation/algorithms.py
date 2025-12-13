@@ -224,9 +224,11 @@ class SandwichedPermutation(StatePreparationBase):
         self,
         sub_state_preparation: Callable[[np.ndarray], StatePreparationResult],
         mcx_gate_type: Type[MCXGateBase],
+        do_validation: bool = True,
     ):
         self.sub_state_preparation = sub_state_preparation
         self.mcx_gate_type = mcx_gate_type
+        self.do_validation = do_validation
 
     def _get_result(
         self,
@@ -278,7 +280,9 @@ class SandwichedPermutation(StatePreparationBase):
         qc += cirq.global_phase_operation(get_global_phase_match(dense_sv_to_prep, qc))
 
         perm_qc = perm.index_extraction_based_decomposition_qc(
-            cirq.LineQubit.range(sv_num_qubit), mcx_gate_type=self.mcx_gate_type
+            cirq.LineQubit.range(sv_num_qubit),
+            mcx_gate_type=self.mcx_gate_type,
+            do_validation=self.do_validation,
         )
 
         assert all(

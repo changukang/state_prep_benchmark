@@ -3,6 +3,8 @@ from typing import Sequence
 import cirq
 
 
+# TODO : maybe unused?
+
 def aux_increment_with_borrowed_qubits(
     target: Sequence[cirq.LineQubit], borrowed: Sequence[cirq.LineQubit]
 ) -> cirq.Circuit:

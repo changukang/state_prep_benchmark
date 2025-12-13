@@ -1,7 +1,6 @@
 from typing import Sequence, Union
 
 import cirq
-import cirq.circuits
 from cirq.transformers.analytical_decompositions import \
     decompose_multi_controlled_x
 from qiskit.synthesis import (synth_mcx_1_dirty_kg24, synth_mcx_2_dirty_kg24,

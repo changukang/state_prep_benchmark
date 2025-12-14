@@ -61,7 +61,10 @@ class StatePreparationResult:
             if isinstance(self.circuit, qiskit.QuantumCircuit)
             else self.circuit
         )
-        normalized_cirq_qc = cirq.merge_single_qubit_gates_to_phxz(cirq_circuit)
+        normalized_cirq_qc = cirq_circuit
+        # TODO: enable folloiwng for normalization in depth calculation
+        # However, it is a bottleneck in large circuits..., maybe apply parallelization?
+        # normalized_cirq_qc = cirq.merge_single_qubit_gates_to_phxz(cirq_circuit)
         if not self.skip_qc_validation:
             validate_result_cirq_circuit(normalized_cirq_qc)
         return normalized_cirq_qc

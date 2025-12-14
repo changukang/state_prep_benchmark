@@ -30,11 +30,11 @@ def num_qubit(state_vector: np.ndarray) -> int:
 def num_cnot_for_cirq_circuit(qc: cirq.Circuit, skip_unknown_gate: bool = False) -> int:
     cnt = 0
     for gate_op in qc.all_operations():
-        if gate_op._num_qubits_() == 2:
+        if len(gate_op.qubits) == 2:
             if gate_op.gate not in [cirq.CX, cirq.CNOT]:
                 raise ValueError(f"Invalid two-qubit gate encountered {gate_op}")
             cnt += 1
-        elif gate_op._num_qubits_() == 1:
+        elif len(gate_op.qubits) == 1:
             continue
         elif isinstance(gate_op.gate, cirq.GlobalPhaseGate):
             continue

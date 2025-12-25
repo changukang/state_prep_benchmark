@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, Type
+from typing import Callable, Dict, Optional, Type
 
 import cirq
 import numpy as np
@@ -12,6 +12,7 @@ from qiskit.exceptions import QiskitError
 from qiskit.quantum_info.states.statevector import Statevector
 
 from qclib.state_preparation import LowRankInitialize, UCGEInitialize
+from qclib.state_preparation.pivot import PivotInitialize
 from state_preparation.mcx.mcx_gates import MCXGateBase
 from state_preparation.permutation.types import Permutation, Transposition
 
@@ -97,6 +98,78 @@ class LowRankStatePrep(StatePreparationBase):
     @property
     def name(self):
         return "Low Rank"
+
+    def __eq__(self, value):
+        return type(self) is type(value)
+
+
+def statevector_to_sparse_dict(
+    statevector: np.ndarray,
+    atol: float = 1e-12,
+) -> Dict[str, complex]:
+    """
+    Convert a statevector (np.ndarray) into sparse dict form:
+        {'001': amp1, '110': amp2, ...}
+
+    Args:
+        statevector: np.ndarray of shape (2**n,)
+        atol: threshold below which amplitudes are treated as zero
+
+    Returns:
+        Dict[str, complex]
+    """
+    statevector = np.asarray(statevector)
+    dim = statevector.shape[0]
+
+    # sanity check
+    n_qubits = int(np.log2(dim))
+    if 2**n_qubits != dim:
+        raise ValueError("Length of statevector must be power of 2")
+
+    sparse_data = {}
+    for idx, amp in enumerate(statevector):
+        if np.abs(amp) > atol:
+            bitstring = format(idx, f"0{n_qubits}b")
+            sparse_data[bitstring] = amp
+
+    return sparse_data
+
+
+class PivotStatePrep(StatePreparationBase):
+
+    def __init__(self, skip_qc_validation: bool = False):
+        self.skip_qc_validation = skip_qc_validation
+
+    def _get_result(self, state_vector: np.ndarray) -> StatePreparationResult:
+
+        sv_num_qubit = num_qubit(state_vector)
+        if sv_num_qubit < 10:
+            logger.info(f"State to Prepare : {cirq.dirac_notation(state_vector)}")
+        logger.info(f"Num qubit : {sv_num_qubit}")
+
+        logger.info("Running PivotStatePrep")
+
+        data = statevector_to_sparse_dict(state_vector)
+
+        with catchtime() as time:
+            circuit = PivotInitialize(data).definition
+
+        assert isinstance(circuit, qiskit.QuantumCircuit)
+        transpiled_circuit = transpile(
+            circuit, basis_gates=["u3", "cx"], optimization_level=0
+        )
+
+        return StatePreparationResult(
+            state_prep_engine=self,
+            target_sv=state_vector,
+            circuit=transpiled_circuit,
+            elapsed_time=time(),
+            skip_qc_validation=self.skip_qc_validation,
+        )
+
+    @property
+    def name(self):
+        return "Pivot"
 
     def __eq__(self, value):
         return type(self) is type(value)

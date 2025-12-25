@@ -178,11 +178,6 @@ class Permutation:
 
     __repr__ = __str__
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Permutation):
-            return NotImplemented
-        return self.p == other.p
-
     def decompose_into_two_disjoint_transpositions(
         self,
     ) -> Tuple[TranspositionsList, TranspositionsList]:

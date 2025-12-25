@@ -147,7 +147,6 @@ def test_qulin_mcx_gate():
     res_qulin = cirq.decompose(
         cirq.Circuit(qulin_gate), keep=keep_ftn_for_cirq_decompose
     )
-    res_qulin_decompose_once = cirq.decompose_once(qulin_gate)
 
     # res_vale = cirq.decompose(cirq.Circuit(vale_gate), keep=keep_ftn_for_cirq_decompose)
     res_canon_mcx = cirq.decompose(

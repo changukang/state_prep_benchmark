@@ -8,6 +8,7 @@ from state_preparation.mcx.mcx_gates import (
     KGDirtyOneMCXGate,
     KGDirtyTwoMCXGate,
     MCXGateBase,
+    NotEnoughAuxQubits,
     QulinMCXGate,
     ValeMCXGate,
 )

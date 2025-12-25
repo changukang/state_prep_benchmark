@@ -185,6 +185,7 @@ def bit_string_to_quantum_state(bit_string: Sequence[int]) -> np.ndarray:
 
 
 class GraphPermutationSuperposition(BenchmarkStateVectorWithParameters):
+    # ref : https://quantumcomputing.stackexchange.com/questions/37016/how-to-create-the-state-n-frac12-sum-pi-in-s-n-pi-pi-g
 
     @classmethod
     def sample_parameters(cls, n: int, seed: int) -> Dict[str, Any]:

@@ -258,6 +258,8 @@ class CirqStandardMCXGate(MCXGateBase):
         yield from self._flip_controls(qubits)
 
 
+# Oracle mapping (num_main_qubits, num_aux_qubits) to (MCXGateClass, gate_cost).
+# The main qubits include both control qubits and a single target qubit.
 oracle = {
     (4, 0): (ItenDirtyMCXGate, 14),
     (4, 1): (ItenDirtyMCXGate, 14),

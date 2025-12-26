@@ -125,14 +125,6 @@ def qiskit2cirq(qiskit_qc: qiskit.QuantumCircuit, do_reverse=False) -> cirq.Circ
                 len(op.qubits) <= 2 for op in into_optimal_toffoli
             ), "Decomposed operations must be at most 2-qubit gates"
             cirq_qc.append(into_optimal_toffoli)
-
-            # cirq_qc.append(
-            #     cirq.ControlledGate(
-            #         sub_gate=cirq.ZPowGate(exponent=exponent),
-            #         num_controls=len(controls),
-            #     )(*controls, target)
-            # )
-
         elif gate.operation.name == "h":
             qubit = cirq.LineQubit(qiskit_qc.qubits.index(gate.qubits[0]))
             cirq_qc.append(cirq.H(qubit))

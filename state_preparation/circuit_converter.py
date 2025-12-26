@@ -105,6 +105,8 @@ def qiskit2cirq(qiskit_qc: qiskit.QuantumCircuit, do_reverse=False) -> cirq.Circ
                 cirq.decompose_once(OptimalToffoli()(control1, control2, target))
             )
         elif gate.operation.name == "mcphase":
+            # TODO : Consider exploring more optimal multi-controlled SU(2) decompositions.
+            # The current implementation in Cirq is based on the method of Barenco et al., 1995.
             controls = [
                 cirq.LineQubit(qiskit_qc.qubits.index(q)) for q in gate.qubits[:-1]
             ]

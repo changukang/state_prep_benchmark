@@ -11,22 +11,10 @@ from qiskit.synthesis import (
 )
 
 from state_preparation.circuit_converter import qiskit2cirq
+from state_preparation.gates.utils import NotEnoughAuxQubits
 from state_preparation.utils import (  # Using technique from Braceno et al.
     keep_ftn_for_cirq_decompose,
 )
-
-
-class NotEnoughAuxQubits(Exception):
-    """Exception raised when there are not enough auxiliary qubits available."""
-
-    def __init__(self, required: int, available: int, num_controls: int):
-        self.required = required
-        self.available = available
-        self.num_controls = num_controls
-        super().__init__(
-            f"Not enough auxiliary qubits. Required: {required}, Available: {available}, "
-            f"for {num_controls} control qubits."
-        )
 
 
 def get_qulin_mcx_in_cirq_no_aux(num_control: int) -> cirq.Circuit:

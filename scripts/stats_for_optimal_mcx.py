@@ -2,7 +2,7 @@ from typing import Dict, Tuple, Type
 
 import cirq.circuits
 
-from state_preparation.gates.mcx.mcx_gates import (
+from state_preparation.gates.mcx.types import (
     CirqStandardMCXGate,
     ItenDirtyMCXGate,
     KGDirtyOneMCXGate,

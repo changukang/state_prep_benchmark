@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 from dataclasses import dataclass
 from math import gcd, log2
@@ -7,7 +9,7 @@ import cirq
 import numpy as np
 from cirq import Circuit
 
-from state_preparation.mcx.mcx_gates import CanonMCXGate, MCXGateBase
+from state_preparation.gates.mcx.types import CanonMCXGate, MCXGateBase
 
 
 def _lcm(a: int, b: int) -> int:

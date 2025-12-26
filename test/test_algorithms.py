@@ -12,7 +12,7 @@ from state_preparation.algorithms import (
     SandwichedPermutation,
     UCGEBased,
 )
-from state_preparation.mcx.mcx_gates import SelectiveOptimalMCXGate
+from state_preparation.gates.mcx.types import SelectiveOptimalMCXGate
 from state_preparation.results import StatePreparationResult
 from state_preparation.state_samplers import get_random_sparse_state, get_random_state
 

@@ -6,11 +6,11 @@ import numpy as np
 import pytest
 
 from state_preparation.circuit_converter import qiskit2cirq
-from state_preparation.mcx.increments import (
+from state_preparation.gates.mcx.increments import (
     decrement_with_borrowed_qubits,
     increment_with_borrowed_qubits,
 )
-from state_preparation.mcx.mcx_gates import (
+from state_preparation.gates.mcx.types import (
     CirqStandardMCXGate,
     ItenDirtyMCXGate,
     KGDirtyOneMCXGate,

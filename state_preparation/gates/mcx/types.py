@@ -1,4 +1,4 @@
-from typing import Sequence, Union
+from typing import Callable, Sequence, Union
 
 import cirq
 from cirq.transformers.analytical_decompositions import decompose_multi_controlled_x
@@ -11,7 +11,7 @@ from qiskit.synthesis import (
 )
 
 from state_preparation.circuit_converter import qiskit2cirq
-from state_preparation.gates.utils import NotEnoughAuxQubits
+from state_preparation.gates.utils import MCUGateBase
 from state_preparation.utils import (  # Using technique from Braceno et al.
     keep_ftn_for_cirq_decompose,
 )
@@ -48,17 +48,7 @@ def get_vale_mcx_in_cirq_no_aux(num_control: int) -> cirq.Circuit:
     return cirq.Circuit(decomposed)
 
 
-class MCXGateBase(cirq.Gate):
-
-    @classmethod
-    def required_aux_qubits_num(cls, num_ctrl: int) -> Union[int, None]:
-        raise NotImplementedError
-
-    @classmethod
-    def max_valid_aux_qubits_num(
-        cls, num_ctrl: int, num_available_aux_qubits: int
-    ) -> int:
-        raise NotImplementedError
+class MCXGateBase(MCUGateBase):
 
     def __init__(
         self,
@@ -66,21 +56,12 @@ class MCXGateBase(cirq.Gate):
         control_values: Sequence[int] = None,
         num_aux_qubits: int = 0,
     ):
-        super().__init__()
-        self.num_controls = num_controls
-        self.control_values = (
-            control_values if control_values is not None else [1] * num_controls
+        super().__init__(
+            sub_gate=cirq.X,
+            num_controls=num_controls,
+            control_values=control_values,
+            num_aux_qubits=num_aux_qubits,
         )
-
-        self.num_aux_qubits = num_aux_qubits
-
-    def _flip_controls(self, qubits):
-        for i, cv in enumerate(self.control_values):
-            if cv == 0:
-                yield cirq.X(qubits[i])
-
-    def _num_qubits_(self) -> int:
-        return self.num_controls + self.num_aux_qubits + 1
 
     @classmethod
     def from_available_aux_qubits(
@@ -93,27 +74,10 @@ class MCXGateBase(cirq.Gate):
         main_qubits will be composed as controls and target
         """
         num_control = len(main_qubits) - 1
-
-        free_qubits = None
-        if (
-            required_aux_num := cls.required_aux_qubits_num(num_ctrl=num_control)
-        ) is not None:
-            if len(available_aux_qubits) < required_aux_num:
-                raise NotEnoughAuxQubits(
-                    required=required_aux_num,
-                    available=len(available_aux_qubits),
-                    num_controls=num_control,
-                )
-
-            free_qubits = available_aux_qubits[:required_aux_num]
-
-        else:
-            num_max_valid = cls.max_valid_aux_qubits_num(
-                num_ctrl=num_control,
-                num_available_aux_qubits=len(available_aux_qubits),
-            )
-            assert num_max_valid is not None
-            free_qubits = available_aux_qubits[:num_max_valid]
+        free_qubits = cls._select_free_qubits(
+            num_ctrl=num_control,
+            available_aux_qubits=available_aux_qubits,
+        )
 
         mcx_gate = cls(
             num_controls=num_control,
@@ -122,7 +86,7 @@ class MCXGateBase(cirq.Gate):
         )
         return mcx_gate(*(main_qubits + free_qubits))
 
-    def _decompose_(self, qubits, get_mcx_in_cirq):
+    def _decompose_(self, qubits, get_mcx_in_cirq: Callable[[int], cirq.Circuit]):
 
         assert len(qubits) == self.num_controls + self.num_aux_qubits + 1
 

@@ -1,4 +1,3 @@
-import cirq
 import numpy as np
 
 from state_preparation.householder.types import HouseHolderBasedMapping

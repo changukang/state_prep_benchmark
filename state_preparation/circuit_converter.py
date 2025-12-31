@@ -1,5 +1,4 @@
 import cirq
-import cirq.circuits
 import numpy as np
 import qiskit
 import qiskit.qasm2

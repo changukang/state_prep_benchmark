@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "state_prep_benchmark"
 version = "0.0.1"
 dependencies = [
-  "cirq",
+  "cirq==1.6.1",
   "prettytable",
   "fire",
   "qiskit==2.2.3",

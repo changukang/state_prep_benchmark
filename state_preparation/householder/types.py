@@ -1,9 +1,11 @@
-from typing import Callable
+from typing import Callable, Optional, Sequence, Type
 
 import cirq
 import cirq.circuits
 import numpy as np
 
+from state_preparation.gates.mcp.types import MCPhaseGateBase
+from state_preparation.gates.mcx.types import SelectiveOptimalMCXGate
 from state_preparation.results import StatePreparationResult
 
 
@@ -27,9 +29,49 @@ class HouseHolder:
         )
 
     def to_quantum_circuit(
-        self, state_preparation: Callable[[np.ndarray], StatePreparationResult]
+        self,
+        state_preparation: Callable[[np.ndarray], StatePreparationResult],
+        main_qubits: Sequence[cirq.Qid],
+        available_aux_qubits: Sequence[cirq.Qid],
+        mcp_gate: Type[MCPhaseGateBase],
+        mcx_gate: Type[MCPhaseGateBase] = SelectiveOptimalMCXGate,
     ) -> cirq.Circuit:
-        pass
+        qc = cirq.Circuit()
+        assert len(main_qubits) == int(np.log2(self.v.shape[0]))
+
+        if np.allclose(self.v, [1] + [0] * (self.v.shape[0] - 1)):
+            sub_prep_qc = cirq.Circuit()
+        else:
+            sub_prep_qc = state_preparation(self.v).cirq_circuit
+
+        qc += sub_prep_qc**-1
+        if self.phi == np.pi:
+            qc.append(cirq.X(main_qubits[-1]))
+            qc.append(cirq.H(main_qubits[-1]))
+            qc.append(
+                mcx_gate.from_available_aux_qubits(
+                    main_qubits=main_qubits,
+                    available_aux_qubits=available_aux_qubits,
+                    control_values=[0] * (len(main_qubits) - 1),
+                )
+            )
+            qc.append(cirq.H(main_qubits[-1]))
+            qc.append(cirq.X(main_qubits[-1]))
+
+        else:
+
+            mcp_gate_op = mcp_gate.from_available_aux_qubits(
+                phi=self.phi,
+                main_qubits=main_qubits,
+                available_aux_qubits=available_aux_qubits,
+                control_values=[0] * (len(main_qubits) - 1),
+                phase_on_zero=True,
+            )
+            qc.append(mcp_gate_op)
+
+        qc += sub_prep_qc
+
+        return qc
 
 
 class HouseHolderBasedMapping(HouseHolder):

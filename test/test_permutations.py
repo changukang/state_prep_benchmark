@@ -4,7 +4,7 @@ import cirq
 import numpy as np
 import pytest
 
-from state_preparation.mcx.types import CanonMCXGate, QulinMCXGate
+from state_preparation.gates.mcx.types import CanonMCXGate, QulinMCXGate
 from state_preparation.permutation.types import (
     Cycle,
     DisjointTranspositions,

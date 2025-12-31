@@ -1,6 +1,11 @@
+from itertools import product
+
+import cirq
 import numpy as np
 
-from state_preparation.householder.types import HouseHolderBasedMapping
+from state_preparation.algorithms import PivotStatePrep
+from state_preparation.gates.mcp.types import CanonMCPhaseGate
+from state_preparation.householder.types import HouseHolder, HouseHolderBasedMapping
 from state_preparation.state_samplers import get_random_sparse_state, get_random_state
 
 
@@ -27,3 +32,24 @@ def test_house_holder_based_mapping_strict():
         mapped_result = hh_based.matrix @ v
 
         assert np.isclose(w, mapped_result).all()
+
+
+def test_house_holder_qc():
+    num_qubit = 4
+    for seed, phi in product(range(5), [np.pi, np.pi / 3]):
+        v = get_random_state(num_qubit, seed)
+
+        hh = HouseHolder(state_vector=v, phi=phi)
+        qc = hh.to_quantum_circuit(
+            state_preparation=PivotStatePrep().run,
+            main_qubits=cirq.LineQubit.range(num_qubit),
+            available_aux_qubits=[],
+            mcp_gate=CanonMCPhaseGate,
+        )
+
+        res = cirq.final_state_vector(
+            qc, qubit_order=cirq.LineQubit.range(num_qubit), initial_state=v
+        )
+
+        assert np.allclose(res, np.exp(1j * phi) * v)
+        assert np.allclose(hh.matrix, cirq.unitary(qc))

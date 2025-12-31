@@ -81,9 +81,6 @@ def test_random_state_by_rank_vector():
             if any(r <= 2 for r in rank_vector):
                 continue
 
-            print(qubit_partiton)
-            print(rank_vector)
-
             sampled_sv = get_random_state_by_rank_vector(
                 list(qubit_partiton), rank_vector, seed=42
             )

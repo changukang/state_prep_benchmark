@@ -110,7 +110,7 @@ class MCXGateBase(MCUGateBase):
         yield from self._flip_controls(qubits)
 
     def _circuit_diagram_info_(self, args):
-        return ["C"] * self.num_controls + ["X"]
+        return [f"{'NC' if cv == 0 else 'C'}" for cv in self.control_values] + ["X"]
 
 
 class CanonMCXGate(MCXGateBase):

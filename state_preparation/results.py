@@ -62,9 +62,6 @@ class StatePreparationResult:
             else self.circuit
         )
         normalized_cirq_qc = cirq_circuit
-        # TODO: enable folloiwng for normalization in depth calculation
-        # However, it is a bottleneck in large circuits..., maybe apply parallelization?
-        # normalized_cirq_qc = cirq.merge_single_qubit_gates_to_phxz(cirq_circuit)
         if not self.skip_qc_validation:
             validate_result_cirq_circuit(normalized_cirq_qc)
         return normalized_cirq_qc
@@ -73,8 +70,9 @@ class StatePreparationResult:
     def qiskit_circuit(self) -> qiskit.QuantumCircuit:
         raise NotImplementedError
 
-    def _get_noramlized_cirq_circuit(self):
-        raise NotImplementedError
+    @cached_property
+    def _get_noramlized_cirq_circuit(self) -> cirq.Circuit:
+        return cirq.merge_single_qubit_gates_to_phxz(self.cirq_circuit)
 
     @property
     def num_cnot(self) -> int:
@@ -82,7 +80,7 @@ class StatePreparationResult:
 
     @property
     def depth(self) -> int:
-        return len(self.cirq_circuit)
+        return len(self._get_noramlized_cirq_circuit)
 
 
 @dataclass

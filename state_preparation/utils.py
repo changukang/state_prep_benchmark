@@ -15,6 +15,8 @@ def keep_ftn_for_cirq_decompose(gate_op: cirq.Operation):
             return True
         else:
             return False
+    elif isinstance(gate_op.gate, cirq.GlobalPhaseGate):
+        return True
     else:
         return False
 

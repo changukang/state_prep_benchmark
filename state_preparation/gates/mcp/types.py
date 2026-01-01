@@ -1,11 +1,8 @@
-from ast import Not
-from curses.ascii import ctrl
 from typing import Sequence, Union
 
 import cirq
 import numpy as np
 from cirq.transformers.analytical_decompositions.controlled_gate_decomposition import (
-    _decompose_su,
     decompose_multi_controlled_rotation,
 )
 

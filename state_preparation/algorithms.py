@@ -142,11 +142,6 @@ class PivotStatePrep(StatePreparationBase):
 
     def _get_result(self, state_vector: np.ndarray) -> StatePreparationResult:
 
-        sv_num_qubit = num_qubit(state_vector)
-        if sv_num_qubit < 10:
-            logger.info(f"State to Prepare : {cirq.dirac_notation(state_vector)}")
-        logger.info(f"Num qubit : {sv_num_qubit}")
-
         logger.info("Running PivotStatePrep")
 
         data = statevector_to_sparse_dict(state_vector)

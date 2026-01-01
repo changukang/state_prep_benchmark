@@ -1,4 +1,5 @@
-from typing import Callable, Optional, Sequence, Type
+import logging
+from typing import Callable, Sequence, Type
 
 import cirq
 import cirq.circuits
@@ -7,6 +8,9 @@ import numpy as np
 from state_preparation.gates.mcp.types import MCPhaseGateBase
 from state_preparation.gates.mcx.types import SelectiveOptimalMCXGate
 from state_preparation.results import StatePreparationResult
+from state_preparation.utils import num_cnot_for_cirq_circuit
+
+logger = logging.getLogger(__name__)
 
 
 class HouseHolder:
@@ -44,6 +48,9 @@ class HouseHolder:
         else:
             sub_prep_qc = state_preparation(self.v).cirq_circuit
 
+        logger.info(
+            f"HouseHolder state preparation circuit #CNOT: {num_cnot_for_cirq_circuit(sub_prep_qc)} "
+        )
         qc += sub_prep_qc**-1
         if self.phi == np.pi:
             qc.append(cirq.X(main_qubits[-1]))
@@ -59,7 +66,6 @@ class HouseHolder:
             qc.append(cirq.X(main_qubits[-1]))
 
         else:
-
             mcp_gate_op = mcp_gate.from_available_aux_qubits(
                 phi=self.phi,
                 main_qubits=main_qubits,
@@ -67,7 +73,7 @@ class HouseHolder:
                 control_values=[0] * (len(main_qubits) - 1),
                 phase_on_zero=True,
             )
-            qc.append(mcp_gate_op)
+            qc.append(cirq.decompose_once(mcp_gate_op))
 
         qc += sub_prep_qc
 
@@ -78,6 +84,8 @@ class HouseHolderBasedMapping(HouseHolder):
 
     def __init__(self, v: np.ndarray, w: np.ndarray, strict: bool = False):
 
+        if np.allclose(v, w):
+            raise ValueError("v and w must not be equal")
         # v, w must be normalized state vectors
         cirq.validate_normalized_state_vector(v, qid_shape=v.shape)
         cirq.validate_normalized_state_vector(w, qid_shape=w.shape)

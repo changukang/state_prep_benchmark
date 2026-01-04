@@ -34,11 +34,6 @@ from state_preparation.utils import (
 
 logger = logging.getLogger(__name__)
 
-
-class IsometryData(dict):
-    pass
-
-
 class IsometryBase:
 
     def __init__(self, isometry_matrix: np.ndarray | List[List[complex | float]]):

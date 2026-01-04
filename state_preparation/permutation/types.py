@@ -164,11 +164,11 @@ class Permutation:
 
     def order(self) -> int:
         """Return the order of the permutation (lcm of cycle lengths)."""
-        l = 1
+        lcm = 1
         for cyc in self.cycles(remove_fixed=True):
             assert isinstance(cyc, Cycle)
-            l = _lcm(l, len(cyc))
-        return max(l, 1)  # identity → 1
+            lcm = _lcm(lcm, len(cyc))
+        return max(lcm, 1)  # identity → 1
 
     def __str__(self) -> str:
         cyc = self.cycles(remove_fixed=True)

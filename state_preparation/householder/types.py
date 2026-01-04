@@ -27,8 +27,8 @@ class HouseHolder:
     @property
     def matrix(self) -> np.ndarray:
         dim = self.v.shape[0]
-        I = np.eye(dim, dtype=np.complex128)
-        return I + (np.exp(1j * self.phi) - 1.0) * np.outer(
+        iden = np.eye(dim, dtype=np.complex128)
+        return iden + (np.exp(1j * self.phi) - 1.0) * np.outer(
             self.v, np.conjugate(self.v)
         )
 

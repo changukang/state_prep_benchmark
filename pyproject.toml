@@ -18,7 +18,10 @@ dependencies = [
   "mypy",
   "pytest",
   "fire",
-  "rich"
+  "rich",
+  "openfermion",
+  "openfermionpyscf",
+  "pyscf",
 ]
 
 [tool.black]

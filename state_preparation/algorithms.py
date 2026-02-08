@@ -136,6 +136,7 @@ def statevector_to_sparse_dict(
 
 
 class PivotStatePrep(StatePreparationBase):
+    # NOTE : this is merely a wrapper class to use PivotInitialize from qclib
 
     def __init__(self, skip_qc_validation: bool = False):
         self.skip_qc_validation = skip_qc_validation

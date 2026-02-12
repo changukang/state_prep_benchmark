@@ -150,12 +150,6 @@ def _cas_from_pubchem_compound(compound: Compound) -> str:
 
     raise ValueError(f"CAS number not found in PubChem synonyms for CID {compound.cid}")
 
-
-def _cas_from_pubchem_name(name: str) -> str:
-    compound = Compound.from_name(name)
-    return _cas_from_pubchem_compound(compound)
-
-
 def _parse_multiplicity_from_html(html: str) -> int | None:
     def _clean_text(cell_html: str) -> str:
         text = re.sub(r"<[^>]+>", "", cell_html)
@@ -214,87 +208,6 @@ def _parse_multiplicity_from_html(html: str) -> int | None:
                 return int(text_match.group(1))
 
     return None
-
-
-# Following is old code for deriving degeneracy from CCCBDB HTML tables
-# which must be different with multiplicity?
-# """
-# Parse CCCBDB 'Electronic Energy Levels' table and return degeneracy
-# where Energy (cm^-1) == 0.
-# """
-# box_match = re.search(
-#     r'<div[^>]*class="box"[^>]*title="Electronic Energy Levels"[^>]*>(.*?)</div>',
-#     html,
-#     flags=re.DOTALL | re.IGNORECASE,
-# )
-# if not box_match:
-#     return None
-
-# box_html = box_match.group(1)
-# table_match = re.search(
-#     r"<table\b.*?>.*?</table>", box_html, flags=re.DOTALL | re.IGNORECASE
-# )
-# if not table_match:
-#     return None
-
-# table_html = table_match.group(0)
-# rows = re.findall(r"<tr\b.*?>.*?</tr>", table_html, flags=re.DOTALL | re.IGNORECASE)
-# if not rows:
-#     return None
-
-# def _clean_cell(text: str) -> str:
-#     text = re.sub(r"<[^>]+>", " ", text)
-#     text = re.sub(r"\s+", " ", text).strip()
-#     return text
-
-# header_cells = re.findall(
-#     r"<t[dh]\b.*?>.*?</t[dh]>", rows[0], flags=re.DOTALL | re.IGNORECASE
-# )
-# if not header_cells:
-#     return None
-
-# headers = [_clean_cell(c).lower() for c in header_cells]
-
-# def _find_col(needle: str) -> int | None:
-#     for i, h in enumerate(headers):
-#         if needle in h:
-#             return i
-#     return None
-
-# energy_idx = _find_col("energy")
-# degeneracy_idx = _find_col("degeneracy")
-# if energy_idx is None or degeneracy_idx is None:
-#     return None
-
-# def _parse_float(s: str) -> float | None:
-#     m = re.search(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?", s)
-#     if not m:
-#         return None
-#     try:
-#         return float(m.group(0))
-#     except ValueError:
-#         return None
-
-# for row in rows[1:]:
-#     cells = re.findall(
-#         r"<t[dh]\b.*?>.*?</t[dh]>", row, flags=re.DOTALL | re.IGNORECASE
-#     )
-#     if len(cells) <= max(energy_idx, degeneracy_idx):
-#         continue
-#     clean_cells = [_clean_cell(c) for c in cells]
-
-#     energy_val = _parse_float(clean_cells[energy_idx])
-#     if energy_val is None or abs(energy_val) > 1e-9:
-#         continue
-
-#     degeneracy_val = _parse_float(clean_cells[degeneracy_idx])
-#     if degeneracy_val is None:
-#         continue
-
-#     return int(round(degeneracy_val))
-
-# return None
-
 
 def fetch_multiplicity_from_cccbdb(name: str, cas: str | None = None) -> int | None:
     """

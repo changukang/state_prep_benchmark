@@ -1,0 +1,27 @@
+{
+    "cid": "157350",
+    "multiplicity": 2,
+    "result": {
+        "id": "157350",
+        "multiplicity": 2,
+        "geometry": [
+            [
+                "O",
+                [
+                    3,
+                    0,
+                    0
+                ]
+            ],
+            [
+                "H",
+                [
+                    2,
+                    0,
+                    0
+                ]
+            ]
+        ],
+        "charge": 0
+    }
+}

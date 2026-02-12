@@ -1,0 +1,27 @@
+{
+    "cid": "62714",
+    "multiplicity": 1,
+    "result": {
+        "id": "62714",
+        "multiplicity": 1,
+        "geometry": [
+            [
+                "Li",
+                [
+                    3,
+                    0,
+                    0
+                ]
+            ],
+            [
+                "H",
+                [
+                    2,
+                    0,
+                    0
+                ]
+            ]
+        ],
+        "charge": 0
+    }
+}

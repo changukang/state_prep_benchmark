@@ -17,7 +17,6 @@ from openfermion.ops import QubitOperator
 from openfermionpyscf import run_pyscf
 from pubchempy import Compound
 
-from state_preparation.utils import sparsity
 
 from .abstract import BenchmarkStateVector
 

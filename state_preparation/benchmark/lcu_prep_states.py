@@ -1,5 +1,4 @@
 import math
-from operator import ge
 import re
 from html import unescape
 from dataclasses import dataclass

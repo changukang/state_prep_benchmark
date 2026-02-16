@@ -111,9 +111,8 @@ class HoulseHolderBasedDenseIsometry(IsometryBase):
                 mcp_gate=mcp_gate,
                 mcx_gate=mcx_gate,
             )
-            logger.info("Householder for column", idx)
-            print("The cnot num is", num_cnot_for_cirq_circuit(hh_based_qc))
-
+            logger.info(f"Householder for column {idx}")
+            logger.info(f"The cnot num is {num_cnot_for_cirq_circuit(hh_based_qc)}")
             qc += hh_based_qc
 
             curr_V = hh_based_qc.unitary() @ curr_V

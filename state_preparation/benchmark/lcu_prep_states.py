@@ -1,8 +1,10 @@
+import json
 import math
+import os
 import re
-from html import unescape
 from dataclasses import dataclass
-from typing import List, Tuple
+from html import unescape
+from typing import Any, Dict, List, Literal, Tuple
 
 import numpy as np
 import openfermion
@@ -17,7 +19,6 @@ from openfermion.chem import periodic_hash_table
 from openfermion.ops import QubitOperator
 from openfermionpyscf import run_pyscf
 from pubchempy import Compound
-
 
 from .abstract import BenchmarkStateVector
 
@@ -149,6 +150,7 @@ def _cas_from_pubchem_compound(compound: Compound) -> str:
 
     raise ValueError(f"CAS number not found in PubChem synonyms for CID {compound.cid}")
 
+
 def _parse_multiplicity_from_html(html: str) -> int | None:
     def _clean_text(cell_html: str) -> str:
         text = re.sub(r"<[^>]+>", "", cell_html)
@@ -208,6 +210,7 @@ def _parse_multiplicity_from_html(html: str) -> int | None:
 
     return None
 
+
 def fetch_multiplicity_from_cccbdb(name: str, cas: str | None = None) -> int | None:
     """
     Try to fetch ground-state multiplicity from NIST CCCBDB.
@@ -249,7 +252,8 @@ class LcuPrepStatesBenchmark(BenchmarkStateVector):
         multiplicity: int | None,
         geometry: List[Tuple[str, Tuple[float, float, float]]] | None,
         charge: int,
-    ) -> dict:
+    ) -> Dict[Literal["id", "multiplicity", "geometry", "charge"], Any]:
+
         if geometry is None:
             cas = None
             if id.isdigit():
@@ -290,12 +294,34 @@ class LcuPrepStatesBenchmark(BenchmarkStateVector):
         geometry: List[Tuple[str, Tuple[float, float, float]]] | None = None,
         charge: int = 0,
     ):
-        data = LcuPrepStatesBenchmark._get_required_data_for_init(
-            id,
-            multiplicity,
-            geometry,
-            charge,
-        )
+        precomputed_dir = os.path.join(os.path.dirname(__file__), "compound_data")
+        precomputed_file = os.path.join(precomputed_dir, f"output_{id}.json")
+
+        if (
+            id.isdigit()
+            and geometry is None
+            and multiplicity is None
+            and os.path.exists(precomputed_file)
+        ):
+
+            with open(precomputed_file, "r") as f:
+                precomputed_data = json.load(f)
+
+            data = {
+                "id": id,
+                "multiplicity": precomputed_data["result"]["multiplicity"],
+                "geometry": precomputed_data["result"]["geometry"],
+                "charge": precomputed_data["result"]["charge"],
+            }
+
+        else:
+
+            data = LcuPrepStatesBenchmark._get_required_data_for_init(
+                id,
+                multiplicity,
+                geometry,
+                charge,
+            )
 
         self.qubit_op = build_qubit_hamiltonian_jw(
             data["geometry"],

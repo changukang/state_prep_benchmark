@@ -8,9 +8,11 @@ import numpy as np
 from state_preparation.state_samplers import (
     get_random_basis_state_vectors,
     get_random_sparse_state,
+    get_random_sparse_state_with_num_unique_amps,
     get_random_state,
     get_random_state_by_rank_vector,
 )
+from state_preparation.utils import sparsity
 
 
 def test_random_state():
@@ -27,6 +29,22 @@ def test_random_sparse_statea():
 def test_random_basis_state_vectors():
     for seed in range(10):
         get_random_basis_state_vectors(num_qubit=2, num_basis=2, seed=seed)
+
+
+def test_random_sparse_state_with_num_unique_amps():
+    for seed in [2026]:
+        for sparsity_num, num_unique_amps in [(5, 3), (10, 5), (30, 10)]:
+            sv = get_random_sparse_state_with_num_unique_amps(
+                num_qubit=9,
+                sparsity=sparsity_num,
+                num_unique_amps=num_unique_amps,
+                seed=seed,
+            )
+
+            assert sparsity(sv) == sparsity_num
+            assert (
+                len(np.unique(sv[sv != 0])) == num_unique_amps
+            )  # this could be fail due to random sampling...
 
 
 def test_random_state_by_rank_vector():

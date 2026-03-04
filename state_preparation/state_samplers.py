@@ -10,6 +10,39 @@ def get_random_state(num_qubit: int, seed: Optional[int] = None) -> np.ndarray:
     return cirq.testing.random_superposition(dim=2**num_qubit, random_state=seed)
 
 
+def get_random_sparse_state_with_num_unique_amps(
+    num_qubit: int,
+    sparsity: int,
+    num_unique_amps: int,
+    seed: Optional[int] = None,
+    complex: bool = True,
+) -> np.ndarray:
+    if not (0 < sparsity <= 2**num_qubit):
+        raise ValueError("sparsity must be in the range (0, 2**num_qubit]")
+    if not (0 < num_unique_amps <= sparsity):
+        raise ValueError("num_unique_amps must be in the range (0, sparsity]")
+
+    rng = np.random.default_rng(seed)
+    non_zero_terms = rng.choice(2**num_qubit, size=sparsity, replace=False)
+
+    # Generate unique amplitudes
+    unique_amps = (
+        rng.random(num_unique_amps) + 1j * rng.random(num_unique_amps)
+        if complex
+        else rng.random(num_unique_amps)
+    )
+
+    # Assign amplitudes by randomly choosing from unique amplitudes
+    amps = unique_amps[rng.integers(0, num_unique_amps, size=sparsity)]
+
+    sv = np.zeros(2**num_qubit, dtype=np.complex128)
+    sv[non_zero_terms] = amps
+    sv /= np.linalg.norm(sv)
+
+    cirq.validate_normalized_state_vector(sv, qid_shape=(2**num_qubit,))
+    return sv
+
+
 def get_random_sparse_state(
     num_qubit: int,
     sparsity: int,

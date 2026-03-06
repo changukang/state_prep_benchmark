@@ -49,6 +49,7 @@ class StatePreparationBase(ABC):
 
     def _pre_run(self, state_vector: np.ndarray):
         sv_num_qubit = num_qubit(state_vector)
+        logger.info(f"Running State Preparation Algorithm : {self.name}")
         if sv_num_qubit < 10:
             logger.info(f"State to Prepare : {cirq.dirac_notation(state_vector)}")
         logger.info(f"Num qubit : {sv_num_qubit}")
@@ -69,16 +70,17 @@ class StatePreparationBase(ABC):
 class LowRankStatePrep(StatePreparationBase):
     # implementation of https://arxiv.org/abs/2111.03132
 
-    def __init__(self, skip_qc_validation: bool = False):
+    def __init__(
+        self,
+        skip_qc_validation: bool = False,
+        original_version: bool = False,
+    ):
         self.skip_qc_validation = skip_qc_validation
+        self.original_version = original_version
 
     def _get_result(self, state_vector: np.ndarray) -> StatePreparationResult:
         sv_num_qubit = num_qubit(state_vector)
-        if sv_num_qubit < 10:
-            logger.info(f"State to Prepare : {cirq.dirac_notation(state_vector)}")
-        logger.info(f"Num qubit : {sv_num_qubit}")
 
-        logger.info("Running LowRankStatePrep")
         with catchtime() as time:
             circuit = LowRankInitialize(state_vector).definition
 

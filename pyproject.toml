@@ -56,6 +56,9 @@ log_cli_level = "INFO"
 log_cli_format = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
 testpaths = ["test"]  
 norecursedirs = ["qclib", "quantum-xyz"]
+markers = [
+  "slow: tests that take longer than 10 seconds",
+]
 pythonpath = [
   "."
 ]
@@ -65,4 +68,3 @@ exclude = ["qclib", "quantum-xyz"]
 
 [tool.ty.src]
 exclude = ["qclib", "quantum-xyz"]
-

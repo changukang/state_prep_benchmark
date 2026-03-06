@@ -43,6 +43,7 @@ def test_prepare_engines(prepare_engine):
         assert state_prep_res.num_cnot >= 0
 
 
+@pytest.mark.slow
 def test_xyz():
     for seed in range(5):
         # NOTE : due to duration time of the algorithm, we use a sparse state
@@ -56,6 +57,7 @@ def test_xyz():
         assert cirq.equal_up_to_global_phase(sv, sv_from_result)
 
 
+@pytest.mark.slow
 def test_sandwiched_permutation():
     qclib_low_rank_state_prep = LowRankStatePrep().run
     for num_qubit in [9]:

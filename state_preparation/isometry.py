@@ -66,19 +66,32 @@ class IsometryBase:
     def codomain_num_qubit(self) -> int:
         return math.ceil(np.log2(self.isometry_matrix.shape[0]))
 
-    def to_quantum_circuit(**kwargs) -> cirq.Circuit:
+    def to_quantum_circuit(
+        self,
+        main_qubits: Sequence[cirq.Qid],
+        aux_qubits: Sequence[cirq.Qid],
+    ) -> cirq.Circuit:
         raise NotImplementedError()
 
 
 class HoulseHolderBasedDenseIsometry(IsometryBase):
 
-    def to_quantum_circuit(
+    def __init__(
         self,
+        isometry_matrix: np.ndarray | List[List[complex | float]],
         state_preparation: Callable[[np.ndarray], StatePreparationResult],
-        main_qubits: Sequence[cirq.Qid],
-        available_aux_qubits: Sequence[cirq.Qid],
         mcp_gate: Type[MCPhaseGateBase],
         mcx_gate: Type[MCPhaseGateBase] = SelectiveOptimalMCXGate,
+    ):
+        super().__init__(isometry_matrix)
+        self.state_preparation = state_preparation
+        self.mcp_gate = mcp_gate
+        self.mcx_gate = mcx_gate
+
+    def to_quantum_circuit(
+        self,
+        main_qubits: Sequence[cirq.Qid],
+        aux_qubits: Sequence[cirq.Qid],
     ) -> cirq.Circuit:
 
         assert len(main_qubits) == self.domain_num_qubit
@@ -105,11 +118,11 @@ class HoulseHolderBasedDenseIsometry(IsometryBase):
 
             hh_based = HouseHolderBasedMapping(curr_targ, idx_sv, strict=True)
             hh_based_qc = hh_based.to_quantum_circuit(
-                state_preparation=state_preparation,
+                state_preparation=self.state_preparation,
                 main_qubits=main_qubits,
-                available_aux_qubits=available_aux_qubits,
-                mcp_gate=mcp_gate,
-                mcx_gate=mcx_gate,
+                available_aux_qubits=aux_qubits,
+                mcp_gate=self.mcp_gate,
+                mcx_gate=self.mcx_gate,
             )
             logger.info(f"Householder for column {idx}")
             logger.info(f"The cnot num is {num_cnot_for_cirq_circuit(hh_based_qc)}")
@@ -203,19 +216,27 @@ def to_extended_isometry(
 
 class QiskitIsometry(IsometryBase):
 
+    def __init__(
+        self,
+        isometry_matrix: np.ndarray | List[List[complex | float]],
+        force_unitary_synthesis_method: bool = False,
+    ):
+        super().__init__(isometry_matrix)
+        self.force_unitary_synthesis_method = force_unitary_synthesis_method
+
     def to_quantum_circuit(
         self,
-        main_qubits: List[cirq.Qid],
-        force_unitary_synthesis_method: bool = False,
-        **kwargs,
+        main_qubits: Sequence[cirq.Qid],
+        aux_qubits: Sequence[cirq.Qid],
     ) -> cirq.Circuit:
+        del aux_qubits
         isometry_shape = self.isometry_matrix.shape
         assert 2**self.codomain_num_qubit == isometry_shape[0]
 
         if (
             isometry_shape[0] == isometry_shape[1]
             and self.domain_num_qubit == self.codomain_num_qubit
-        ) or force_unitary_synthesis_method:
+        ) or self.force_unitary_synthesis_method:
             unitary_to_apply = None
             if not cirq.is_unitary(self.isometry_matrix):
                 unitary_to_apply = to_extended_isometry(

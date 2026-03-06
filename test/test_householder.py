@@ -48,7 +48,10 @@ def test_house_holder_qc():
             )
 
             res = cirq.final_state_vector(
-                qc, qubit_order=cirq.LineQubit.range(num_qubit), initial_state=v
+                qc,
+                qubit_order=cirq.LineQubit.range(num_qubit),
+                initial_state=v,
+                dtype=np.complex128,
             )
 
             assert np.allclose(res, np.exp(1j * phi) * v)
@@ -71,7 +74,9 @@ def test_house_holder_based_map_qc():
             )
 
             res = qc.final_state_vector(
-                initial_state=v, qubit_order=cirq.LineQubit.range(num_qubit)
+                initial_state=v,
+                qubit_order=cirq.LineQubit.range(num_qubit),
+                dtype=np.complex128,
             )
 
             assert np.allclose(res, w)

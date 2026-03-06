@@ -73,13 +73,10 @@ class LowRankStatePrep(StatePreparationBase):
     def __init__(
         self,
         skip_qc_validation: bool = False,
-        original_version: bool = False,
     ):
         self.skip_qc_validation = skip_qc_validation
-        self.original_version = original_version
 
     def _get_result(self, state_vector: np.ndarray) -> StatePreparationResult:
-        sv_num_qubit = num_qubit(state_vector)
 
         with catchtime() as time:
             circuit = LowRankInitialize(state_vector).definition

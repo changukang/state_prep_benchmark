@@ -1,8 +1,9 @@
 import logging
 
+import numpy as np
+
 from state_preparation.benchmark.lcu_prep_states import LcuPrepStatesBenchmark
 from state_preparation.utils import sparsity
-import numpy as np
 
 logging.basicConfig(level=logging.INFO)
 

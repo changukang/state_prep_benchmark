@@ -35,8 +35,6 @@ def test_hh_based_isometry():
 
         assert cirq.equal_up_to_global_phase(res, expected, atol=1e-8)
 
-    print(num_cnot_for_cirq_circuit(qc))
-
 
 def test_qiskit_based_isometry():
     logging.getLogger("qiskit.passmanager.base_tasks").setLevel(logging.WARNING)

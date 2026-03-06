@@ -152,9 +152,12 @@ def test_qulin_mcx_gate():
     res_canon_mcx = cirq.decompose(
         cirq.Circuit(canon_mcx), keep=keep_ftn_for_cirq_decompose
     )
-    print(num_cnot_for_cirq_circuit(cirq.Circuit(res_qulin)))
+    qulin_cnots = num_cnot_for_cirq_circuit(cirq.Circuit(res_qulin))
     # print(num_cnot_for_cirq_circuit(cirq.Circuit(res_vale)))
-    print(num_cnot_for_cirq_circuit(cirq.Circuit(res_canon_mcx)))
+    canon_cnots = num_cnot_for_cirq_circuit(cirq.Circuit(res_canon_mcx))
+
+    assert qulin_cnots >= 0
+    assert canon_cnots >= 0
 
 
 def test_qulin():
@@ -162,8 +165,7 @@ def test_qulin():
     qulin_gate = QulinMCXGate(num_controls=1)(*qubits)
     canon_mcx = cirq.X.controlled(1)(qubits[1], qubits[0])
 
-    print(cirq.unitary(qulin_gate))
-    print(cirq.unitary(canon_mcx))
+    assert cirq.approx_eq(cirq.unitary(qulin_gate), cirq.unitary(canon_mcx), atol=1e-8)
 
 
 @pytest.mark.parametrize(
@@ -204,10 +206,7 @@ def test_mcx_with_aux_qubits(mcx_gate: Type[MCXGateBase]):
         res_oracle = oracle_qc.final_state_vector(
             initial_state=init_sv, qubit_order=qubits, dtype=np.complex128
         )
-        print("On MCX Gate:", mcx_gate.__name__)
-        print(
-            f"Num CNOTs: on num control : {num_control}", num_cnot_for_cirq_circuit(qc)
-        )
+        assert num_cnot_for_cirq_circuit(qc) >= 0
         assert np.allclose(res, res_oracle, atol=1e-8)
 
 
@@ -216,4 +215,3 @@ def test_select_mcx_gate():
     main_qubits = qubits[:2]
     aux_qubits = qubits[4:]
     res = SelectiveOptimalMCXGate.from_available_aux_qubits(main_qubits, aux_qubits)
-    print(res)

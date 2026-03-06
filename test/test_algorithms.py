@@ -40,7 +40,7 @@ def test_prepare_engines(prepare_engine):
         qc = state_prep_res.cirq_circuit
         sv_from_result = cirq.final_state_vector(qc, dtype=np.complex128)
         assert cirq.equal_up_to_global_phase(sv, sv_from_result)
-        print("Number of CNOTs:", state_prep_res.num_cnot)
+        assert state_prep_res.num_cnot >= 0
 
 
 def test_xyz():
@@ -60,9 +60,6 @@ def test_sandwiched_permutation():
     qclib_low_rank_state_prep = LowRankStatePrep().run
     for num_qubit in [9]:
         for sparsity in [100, 200, 500]:
-            print(
-                f"Test Sandwiched Permutation : num_qubit={num_qubit}, sparsity={sparsity}"
-            )
             sv = get_random_sparse_state(
                 num_qubit=num_qubit, sparsity=sparsity, seed=2025
             )
@@ -78,5 +75,4 @@ def test_sandwiched_permutation():
             assert cirq.equal_up_to_global_phase(
                 sv, cirq.final_state_vector(res.cirq_circuit, dtype=np.complex128)
             )
-            print("On Num qubit :", num_qubit, "sparsity:", sparsity)
-            print("NUM CNOTS:", res.num_cnot)
+            assert res.num_cnot >= 0

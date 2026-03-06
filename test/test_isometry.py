@@ -16,11 +16,11 @@ def test_hh_based_isometry():
     random_matrix = cirq.testing.random_unitary(2**num_qubit, random_state=2025)
 
     test_hh_based_isometry = HoulseHolderBasedDenseIsometry(
-        random_matrix,
         state_preparation=PivotStatePrep().run,
         mcp_gate=CanonMCPhaseGate,
     )
     qc = test_hh_based_isometry.to_quantum_circuit(
+        isometry_matrix=random_matrix,
         main_qubits=cirq.LineQubit.range(num_qubit),
         aux_qubits=[],
     )
@@ -45,10 +45,9 @@ def test_qiskit_based_isometry():
     random_matrix = cirq.testing.random_unitary(2**num_qubit, random_state=2025)
 
     for num_cols in [2, 5, 8]:
-        test_hh_based_isometry = QiskitIsometry(
-            random_matrix[:, :num_cols], force_unitary_synthesis_method=True
-        )
+        test_hh_based_isometry = QiskitIsometry(force_unitary_synthesis_method=True)
         qc = test_hh_based_isometry.to_quantum_circuit(
+            isometry_matrix=random_matrix[:, :num_cols],
             main_qubits=cirq.LineQubit.range(num_qubit),
             aux_qubits=[],
         )

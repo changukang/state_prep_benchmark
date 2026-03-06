@@ -36,38 +36,32 @@ logger = logging.getLogger(__name__)
 
 class IsometryBase:
 
-    def __init__(self, isometry_matrix: np.ndarray | List[List[complex | float]]):
+    @staticmethod
+    def _parse_isometry_matrix(
+        isometry_matrix: np.ndarray | List[List[complex | float]],
+    ) -> np.ndarray:
         if isinstance(isometry_matrix, np.ndarray):
             if isometry_matrix.ndim != 2:
                 raise ValueError("isometry_matrix must be a 2D array.")
-            self._isometry_matrix = isometry_matrix
+            matrix = isometry_matrix
         elif isinstance(isometry_matrix, list) and all(
             isinstance(row, list) for row in isometry_matrix
         ):
-            self._isometry_matrix = np.array(isometry_matrix)
+            matrix = np.array(isometry_matrix)
         else:
             raise ValueError("isometry_matrix must be a 2D list or a 2D numpy.ndarray.")
 
-        num_rows = len(self.isometry_matrix)
+        num_rows = len(matrix)
         if not (num_rows > 0 and (num_rows & (num_rows - 1)) == 0):
             raise ValueError(
                 "The number of rows in isometry_matrix must be a power of 2."
             )
 
-    @property
-    def isometry_matrix(self) -> np.ndarray:
-        return self._isometry_matrix
-
-    @property
-    def domain_num_qubit(self) -> int:
-        return math.ceil(np.log2(self.isometry_matrix.shape[1]))
-
-    @property
-    def codomain_num_qubit(self) -> int:
-        return math.ceil(np.log2(self.isometry_matrix.shape[0]))
+        return matrix
 
     def to_quantum_circuit(
         self,
+        isometry_matrix: np.ndarray | List[List[complex | float]],
         main_qubits: Sequence[cirq.Qid],
         aux_qubits: Sequence[cirq.Qid],
     ) -> cirq.Circuit:
@@ -78,38 +72,37 @@ class HoulseHolderBasedDenseIsometry(IsometryBase):
 
     def __init__(
         self,
-        isometry_matrix: np.ndarray | List[List[complex | float]],
         state_preparation: Callable[[np.ndarray], StatePreparationResult],
         mcp_gate: Type[MCPhaseGateBase],
         mcx_gate: Type[MCPhaseGateBase] = SelectiveOptimalMCXGate,
     ):
-        super().__init__(isometry_matrix)
         self.state_preparation = state_preparation
         self.mcp_gate = mcp_gate
         self.mcx_gate = mcx_gate
 
     def to_quantum_circuit(
         self,
+        isometry_matrix: np.ndarray | List[List[complex | float]],
         main_qubits: Sequence[cirq.Qid],
         aux_qubits: Sequence[cirq.Qid],
     ) -> cirq.Circuit:
+        matrix = self._parse_isometry_matrix(isometry_matrix)
+        domain_num_qubit = math.ceil(np.log2(matrix.shape[1]))
+        codomain_num_qubit = math.ceil(np.log2(matrix.shape[0]))
 
-        assert len(main_qubits) == self.domain_num_qubit
+        assert len(main_qubits) == domain_num_qubit
 
         qc = cirq.Circuit()
 
-        curr_V = self.isometry_matrix
+        curr_V = matrix
 
-        for idx in range(self.isometry_matrix.shape[1]):
+        for idx in range(matrix.shape[1]):
 
             idx_sv = cirq.one_hot(
-                index=idx, shape=(2**self.codomain_num_qubit,), dtype=np.complex128
+                index=idx, shape=(2**codomain_num_qubit,), dtype=np.complex128
             )
             curr_targ = curr_V[:, idx]
-            if (
-                idx == self.isometry_matrix.shape[1] - 1
-                and self.domain_num_qubit == self.codomain_num_qubit
-            ):
+            if idx == matrix.shape[1] - 1 and domain_num_qubit == codomain_num_qubit:
                 assert cirq.equal_up_to_global_phase(
                     curr_targ, idx_sv
                 ), "Only the last element should be non-zero."
@@ -133,18 +126,16 @@ class HoulseHolderBasedDenseIsometry(IsometryBase):
         ret_qc = qc**-1
         diag_angles_radians = list()
 
-        for res_col, targ_col in zip(
-            ret_qc.unitary().T, self.isometry_matrix.T, strict=True
-        ):
+        for res_col, targ_col in zip(ret_qc.unitary().T, matrix.T, strict=True):
             assert cirq.equal_up_to_global_phase(res_col, targ_col)
             if np.allclose(res_col, targ_col):
                 diag_angles_radians.append(0)
             else:
                 phase_difference = np.angle(np.vdot(res_col, targ_col))
                 diag_angles_radians.append(phase_difference)
-        if len(diag_angles_radians) < 2**self.domain_num_qubit:
+        if len(diag_angles_radians) < 2**domain_num_qubit:
             diag_angles_radians += [0] * (
-                2**self.domain_num_qubit - len(diag_angles_radians)
+                2**domain_num_qubit - len(diag_angles_radians)
             )
 
         digonal_gate_decomposed = cirq.decompose(
@@ -216,34 +207,33 @@ def to_extended_isometry(
 
 class QiskitIsometry(IsometryBase):
 
-    def __init__(
-        self,
-        isometry_matrix: np.ndarray | List[List[complex | float]],
-        force_unitary_synthesis_method: bool = False,
-    ):
-        super().__init__(isometry_matrix)
+    def __init__(self, force_unitary_synthesis_method: bool = False):
         self.force_unitary_synthesis_method = force_unitary_synthesis_method
 
     def to_quantum_circuit(
         self,
+        isometry_matrix: np.ndarray | List[List[complex | float]],
         main_qubits: Sequence[cirq.Qid],
         aux_qubits: Sequence[cirq.Qid],
     ) -> cirq.Circuit:
         del aux_qubits
-        isometry_shape = self.isometry_matrix.shape
-        assert 2**self.codomain_num_qubit == isometry_shape[0]
+        matrix = self._parse_isometry_matrix(isometry_matrix)
+        isometry_shape = matrix.shape
+        domain_num_qubit = math.ceil(np.log2(matrix.shape[1]))
+        codomain_num_qubit = math.ceil(np.log2(matrix.shape[0]))
+        assert 2**codomain_num_qubit == isometry_shape[0]
 
         if (
             isometry_shape[0] == isometry_shape[1]
-            and self.domain_num_qubit == self.codomain_num_qubit
+            and domain_num_qubit == codomain_num_qubit
         ) or self.force_unitary_synthesis_method:
             unitary_to_apply = None
-            if not cirq.is_unitary(self.isometry_matrix):
+            if not cirq.is_unitary(matrix):
                 unitary_to_apply = to_extended_isometry(
-                    self.isometry_matrix, targ_codomain_qubit_num=len(main_qubits)
+                    matrix, targ_codomain_qubit_num=len(main_qubits)
                 )
             else:
-                unitary_to_apply = self.isometry_matrix
+                unitary_to_apply = matrix
 
             assert cirq.is_unitary(unitary_to_apply)
 
@@ -252,12 +242,8 @@ class QiskitIsometry(IsometryBase):
                 unitary_to_apply, opt_a1=True, opt_a2=True
             )
         else:
-            scheme = (
-                "csd"
-                if self.isometry_matrix.shape[0] // 2 == self.isometry_matrix.shape[1]
-                else "ccd"
-            )
-            extended_isometry = to_extended_isometry(self.isometry_matrix)
+            scheme = "csd" if matrix.shape[0] // 2 == matrix.shape[1] else "ccd"
+            extended_isometry = to_extended_isometry(matrix)
             circuit = qclib.isometry.decompose(extended_isometry, scheme=scheme)
 
         circuit_after_transpile = transpile(
@@ -266,7 +252,7 @@ class QiskitIsometry(IsometryBase):
         cirq_qc = qiskit2cirq(circuit_after_transpile, do_reverse=True)
 
         cirq_qc_ret: cirq.Circuit = cirq_qc + cirq.global_phase_operation(
-            get_global_phase_match(self.isometry_matrix[:, 0], cirq_qc)
+            get_global_phase_match(matrix[:, 0], cirq_qc)
         )
 
         return cirq_qc_ret.transform_qubits(lambda q: main_qubits[q.x])
